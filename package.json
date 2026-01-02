@@ -1,0 +1,29 @@
+{
+  "name": "emergency-guardian",
+  "version": "1.0.0",
+  "description": "Emergency Guardian - 去中心化紧急数据管理系统",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "zk-circuits"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:ai-agents\" \"npm run dev:storage\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:ai-agents": "cd ai-agents && python src/main.py",
+    "dev:storage": "cd storage-service && go run cmd/server/main.go",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces && cd contracts && forge test",
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test",
+    "contracts:deploy": "cd contracts && forge script script/Deploy.s.sol"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

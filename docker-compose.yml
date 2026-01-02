@@ -1,0 +1,109 @@
+version: "3.8"
+
+services:
+  # Redis for AI agents communication and caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # IPFS node for decentralized storage
+  ipfs:
+    image: ipfs/kubo:latest
+    ports:
+      - "4001:4001" # P2P port
+      - "5001:5001" # API port
+      - "8080:8080" # Gateway port
+    volumes:
+      - ipfs_data:/data/ipfs
+    environment:
+      - IPFS_PROFILE=server
+
+  # PostgreSQL for backend data
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: emergency_guardian
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # AI Agents Service
+  ai-agents:
+    build:
+      context: ./ai-agents
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://guardian:guardian_pass@postgres:5432/emergency_guardian
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./ai-agents:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # Storage Service (Go)
+  storage-service:
+    build:
+      context: ./storage-service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - IPFS_API_URL=http://ipfs:5001
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - ipfs
+      - redis
+    volumes:
+      - ./storage-service:/app
+
+  # Backend Service (TypeScript)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://guardian:guardian_pass@postgres:5432/emergency_guardian
+      - REDIS_URL=redis://redis:6379
+      - AI_AGENTS_URL=http://ai-agents:8001
+      - STORAGE_SERVICE_URL=http://storage-service:8002
+    depends_on:
+      - postgres
+      - redis
+      - ai-agents
+      - storage-service
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3001
+      - VITE_STORAGE_SERVICE_URL=http://localhost:8002
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  redis_data:
+  ipfs_data:
+  postgres_data:
