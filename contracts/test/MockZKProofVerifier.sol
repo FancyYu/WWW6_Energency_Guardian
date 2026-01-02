@@ -5,34 +5,38 @@ import "../src/interfaces/IZKProofVerifier.sol";
 
 /**
  * @title MockZKProofVerifier
- * @dev Mock ZK proof verifier for testing that always returns true
+ * @dev Mock ZK proof verifier for testing that allows configurable results
  */
 contract MockZKProofVerifier is IZKProofVerifier {
     mapping(uint256 => VerificationKey) public verificationKeys;
     
+    // Configurable verification results for testing
+    bool private _verificationResult = true;
+    
+    function setVerificationResult(bool result) external {
+        _verificationResult = result;
+    }
+    
     function verifyGuardianIdentity(
         bytes calldata /* proof */,
         bytes32 /* publicInputHash */
-    ) external pure returns (bool isValid) {
-        // Always return true for testing
-        return true;
+    ) external view returns (bool isValid) {
+        return _verificationResult;
     }
 
     function verifyEmergencyProof(
         bytes calldata /* proof */,
         bytes32 /* emergencyHash */
-    ) external pure returns (bool isValid) {
-        // Always return true for testing
-        return true;
+    ) external view returns (bool isValid) {
+        return _verificationResult;
     }
 
     function verifyExecutionAuthorization(
         bytes calldata /* proof */,
         address /* executor */,
         bytes32 /* operationHash */
-    ) external pure returns (bool isValid) {
-        // Always return true for testing
-        return true;
+    ) external view returns (bool isValid) {
+        return _verificationResult;
     }
 
     function updateVerificationKey(
@@ -56,10 +60,10 @@ contract MockZKProofVerifier is IZKProofVerifier {
         bytes[] calldata proofs,
         uint256[] calldata /* proofTypes */,
         bytes32[] calldata /* publicInputs */
-    ) external pure returns (bool[] memory results) {
+    ) external view returns (bool[] memory results) {
         results = new bool[](proofs.length);
         for (uint256 i = 0; i < proofs.length; i++) {
-            results[i] = true; // Always return true for testing
+            results[i] = _verificationResult;
         }
         return results;
     }

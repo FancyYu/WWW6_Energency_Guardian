@@ -227,6 +227,75 @@ interface IEmergencyManagement {
      */
     function isGuardian(address guardian) external view returns (bool isGuardian);
 
+    // ============ TIMELOCK CONFIGURATION FUNCTIONS ============
+
+    /**
+     * @notice Updates user's timelock configuration
+     * @param _emergencyTimelock Emergency proposal timelock (1 hour - 7 days)
+     * @param _guardianChangeTimelock Guardian change timelock (24 hours - 30 days)
+     * @param _gracePeriod Owner response grace period (1 hour - 7 days)
+     */
+    function updateTimelockConfig(
+        uint256 _emergencyTimelock,
+        uint256 _guardianChangeTimelock,
+        uint256 _gracePeriod
+    ) external;
+
+    /**
+     * @notice Sets level-specific timelock for emergency levels
+     * @param level Emergency level to configure
+     * @param timelock Timelock period for this level
+     */
+    function setLevelSpecificTimelock(
+        EmergencyLevel level,
+        uint256 timelock
+    ) external;
+
+    /**
+     * @notice Enables or disables dynamic timelock adjustment based on risk scoring
+     * @param enabled Whether to enable dynamic adjustment
+     */
+    function setDynamicTimelockAdjustment(bool enabled) external;
+
+    /**
+     * @notice Gets user's timelock configuration
+     * @param user User address
+     * @return _emergencyTimelock Emergency proposal timelock
+     * @return _guardianChangeTimelock Guardian change timelock
+     * @return _gracePeriod Owner response grace period
+     * @return _dynamicAdjustmentEnabled Whether dynamic adjustment is enabled
+     * @return _lastUpdated Last update timestamp
+     */
+    function getUserTimelockConfig(address user) external view returns (
+        uint256 _emergencyTimelock,
+        uint256 _guardianChangeTimelock,
+        uint256 _gracePeriod,
+        bool _dynamicAdjustmentEnabled,
+        uint256 _lastUpdated
+    );
+
+    /**
+     * @notice Gets level-specific timelock for a user and emergency level
+     * @param user User address
+     * @param level Emergency level
+     * @return timelock Timelock period for this level
+     */
+    function getLevelSpecificTimelock(
+        address user,
+        EmergencyLevel level
+    ) external view returns (uint256 timelock);
+
+    /**
+     * @notice Adjusts timelock based on risk score (only if dynamic adjustment enabled)
+     * @param user User address
+     * @param riskScore Risk score (0-100)
+     * @return adjustedTimelock Adjusted timelock period
+     */
+    function adjustTimelockForRisk(
+        address user,
+        uint256 riskScore
+    ) external view returns (uint256 adjustedTimelock);
+
     // ============ EVENTS ============
 
     /// @dev Emitted when emergency proposal is created
@@ -279,6 +348,27 @@ interface IEmergencyManagement {
         address indexed owner
     );
 
+    /// @dev Emitted when user timelock configuration is updated
+    event TimelockConfigUpdated(
+        address indexed user,
+        uint256 emergencyTimelock,
+        uint256 guardianChangeTimelock,
+        uint256 gracePeriod
+    );
+
+    /// @dev Emitted when level-specific timelock is set
+    event LevelSpecificTimelockSet(
+        address indexed user,
+        EmergencyLevel level,
+        uint256 timelock
+    );
+
+    /// @dev Emitted when dynamic timelock adjustment is enabled/disabled
+    event DynamicTimelockAdjustmentSet(
+        address indexed user,
+        bool enabled
+    );
+
     // ============ ERRORS ============
 
     /// @dev Thrown when caller is not authorized for operation
@@ -301,4 +391,10 @@ interface IEmergencyManagement {
 
     /// @dev Thrown when guardian configuration is invalid
     error InvalidGuardianConfig(string reason);
+
+    /// @dev Thrown when timelock period is invalid
+    error InvalidTimelockPeriod(uint256 provided, uint256 min, uint256 max);
+
+    /// @dev Thrown when risk score is invalid (must be 0-100)
+    error InvalidRiskScore(uint256 score);
 }

@@ -97,6 +97,30 @@ contract EmergencyManagement is
     uint256 public emergencyProposalTimelock;
     uint256 public guardianChangeTimelock;
 
+    /// @dev User-configurable timelock settings
+    struct TimelockConfig {
+        uint256 emergencyTimelock;        // 1 hour - 7 days
+        uint256 guardianChangeTimelock;   // 24 hours - 30 days  
+        uint256 gracePeriod;              // 1 hour - 7 days
+        mapping(EmergencyLevel => uint256) levelSpecificTimelocks;
+        bool dynamicAdjustmentEnabled;
+        uint256 lastUpdated;
+    }
+
+    /// @dev User timelock configurations
+    mapping(address => TimelockConfig) public userTimelockConfigs;
+
+    /// @dev Default timelock configuration
+    TimelockConfig internal defaultTimelockConfig;
+
+    /// @dev Timelock configuration bounds
+    uint256 public constant MIN_EMERGENCY_TIMELOCK = 1 hours;
+    uint256 public constant MAX_EMERGENCY_TIMELOCK = 7 days;
+    uint256 public constant MIN_GUARDIAN_CHANGE_TIMELOCK = 24 hours;
+    uint256 public constant MAX_GUARDIAN_CHANGE_TIMELOCK = 30 days;
+    uint256 public constant MIN_GRACE_PERIOD = 1 hours;
+    uint256 public constant MAX_GRACE_PERIOD = 7 days;
+
     // ============ MODIFIERS ============
 
     modifier onlyGuardian() {
@@ -166,10 +190,181 @@ contract EmergencyManagement is
         emergencyProposalTimelock = 2 hours;
         guardianChangeTimelock = 48 hours;
 
+        // Initialize default timelock configuration
+        _initializeDefaultTimelockConfig();
+
         // Initialize state
         currentEmergencyLevel = EmergencyLevel.None;
         nextProposalId = 1;
         lastOwnerResponse = block.timestamp;
+    }
+
+    // ============ TIMELOCK CONFIGURATION FUNCTIONS ============
+
+    /**
+     * @notice Updates user's timelock configuration
+     * @param _emergencyTimelock Emergency proposal timelock (1 hour - 7 days)
+     * @param _guardianChangeTimelock Guardian change timelock (24 hours - 30 days)
+     * @param _gracePeriod Owner response grace period (1 hour - 7 days)
+     */
+    function updateTimelockConfig(
+        uint256 _emergencyTimelock,
+        uint256 _guardianChangeTimelock,
+        uint256 _gracePeriod
+    ) external {
+        _validateTimelockBounds(_emergencyTimelock, _guardianChangeTimelock, _gracePeriod);
+
+        TimelockConfig storage config = userTimelockConfigs[msg.sender];
+        config.emergencyTimelock = _emergencyTimelock;
+        config.guardianChangeTimelock = _guardianChangeTimelock;
+        config.gracePeriod = _gracePeriod;
+        config.lastUpdated = block.timestamp;
+
+        emit TimelockConfigUpdated(
+            msg.sender,
+            _emergencyTimelock,
+            _guardianChangeTimelock,
+            _gracePeriod
+        );
+    }
+
+    /**
+     * @notice Sets level-specific timelock for emergency levels
+     * @param level Emergency level to configure
+     * @param timelock Timelock period for this level
+     */
+    function setLevelSpecificTimelock(
+        EmergencyLevel level,
+        uint256 timelock
+    ) external validEmergencyLevel(level) {
+        if (timelock < MIN_EMERGENCY_TIMELOCK || timelock > MAX_EMERGENCY_TIMELOCK) {
+            revert InvalidTimelockPeriod(timelock, MIN_EMERGENCY_TIMELOCK, MAX_EMERGENCY_TIMELOCK);
+        }
+
+        TimelockConfig storage config = userTimelockConfigs[msg.sender];
+        config.levelSpecificTimelocks[level] = timelock;
+        config.lastUpdated = block.timestamp;
+
+        emit LevelSpecificTimelockSet(msg.sender, level, timelock);
+    }
+
+    /**
+     * @notice Enables or disables dynamic timelock adjustment based on risk scoring
+     * @param enabled Whether to enable dynamic adjustment
+     */
+    function setDynamicTimelockAdjustment(bool enabled) external {
+        TimelockConfig storage config = userTimelockConfigs[msg.sender];
+        config.dynamicAdjustmentEnabled = enabled;
+        config.lastUpdated = block.timestamp;
+
+        emit DynamicTimelockAdjustmentSet(msg.sender, enabled);
+    }
+
+    /**
+     * @notice Gets user's timelock configuration
+     * @param user User address
+     * @return _emergencyTimelock Emergency proposal timelock
+     * @return _guardianChangeTimelock Guardian change timelock
+     * @return _gracePeriod Owner response grace period
+     * @return _dynamicAdjustmentEnabled Whether dynamic adjustment is enabled
+     * @return _lastUpdated Last update timestamp
+     */
+    function getUserTimelockConfig(address user) external view returns (
+        uint256 _emergencyTimelock,
+        uint256 _guardianChangeTimelock,
+        uint256 _gracePeriod,
+        bool _dynamicAdjustmentEnabled,
+        uint256 _lastUpdated
+    ) {
+        TimelockConfig storage config = userTimelockConfigs[user];
+        
+        // Return user config if set, otherwise return defaults
+        if (config.lastUpdated == 0) {
+            return (
+                defaultTimelockConfig.emergencyTimelock,
+                defaultTimelockConfig.guardianChangeTimelock,
+                defaultTimelockConfig.gracePeriod,
+                defaultTimelockConfig.dynamicAdjustmentEnabled,
+                defaultTimelockConfig.lastUpdated
+            );
+        }
+
+        return (
+            config.emergencyTimelock,
+            config.guardianChangeTimelock,
+            config.gracePeriod,
+            config.dynamicAdjustmentEnabled,
+            config.lastUpdated
+        );
+    }
+
+    /**
+     * @notice Gets level-specific timelock for a user and emergency level
+     * @param user User address
+     * @param level Emergency level
+     * @return timelock Timelock period for this level
+     */
+    function getLevelSpecificTimelock(
+        address user,
+        EmergencyLevel level
+    ) external view validEmergencyLevel(level) returns (uint256 timelock) {
+        TimelockConfig storage config = userTimelockConfigs[user];
+        
+        timelock = config.levelSpecificTimelocks[level];
+        
+        // If not set, return default based on level
+        if (timelock == 0) {
+            timelock = _getDefaultTimelockForLevel(level);
+        }
+    }
+
+    /**
+     * @notice Adjusts timelock based on risk score (only if dynamic adjustment enabled)
+     * @param user User address
+     * @param riskScore Risk score (0-100)
+     * @return adjustedTimelock Adjusted timelock period
+     */
+    function adjustTimelockForRisk(
+        address user,
+        uint256 riskScore
+    ) external view returns (uint256 adjustedTimelock) {
+        if (riskScore > 100) {
+            revert InvalidRiskScore(riskScore);
+        }
+
+        TimelockConfig storage config = userTimelockConfigs[user];
+        
+        if (!config.dynamicAdjustmentEnabled) {
+            // Return base timelock if dynamic adjustment disabled
+            return config.emergencyTimelock > 0 ? 
+                config.emergencyTimelock : 
+                defaultTimelockConfig.emergencyTimelock;
+        }
+
+        uint256 baseTimelock = config.emergencyTimelock > 0 ? 
+            config.emergencyTimelock : 
+            defaultTimelockConfig.emergencyTimelock;
+
+        // High risk (80-100): 30 minutes to 2 hours
+        if (riskScore >= 80) {
+            adjustedTimelock = 30 minutes + (riskScore - 80) * 4.5 minutes;
+        }
+        // Medium risk (40-79): 2 hours to 6 hours  
+        else if (riskScore >= 40) {
+            adjustedTimelock = 2 hours + (riskScore - 40) * 6 minutes;
+        }
+        // Low risk (0-39): Use base timelock or extend up to 12 hours
+        else {
+            adjustedTimelock = baseTimelock + (40 - riskScore) * 15 minutes;
+        }
+
+        // Ensure within bounds
+        if (adjustedTimelock < MIN_EMERGENCY_TIMELOCK) {
+            adjustedTimelock = MIN_EMERGENCY_TIMELOCK;
+        }
+        if (adjustedTimelock > MAX_EMERGENCY_TIMELOCK) {
+            adjustedTimelock = MAX_EMERGENCY_TIMELOCK;
+        }
     }
 
     // ============ PHASE 1: TRIGGER & ACTIVATION ============
@@ -189,13 +384,16 @@ contract EmergencyManagement is
 
         proposalId = nextProposalId++;
         
+        // Get user's timelock configuration
+        uint256 userTimelock = _getUserEmergencyTimelock(msg.sender);
+        
         EmergencyProposal storage proposal = emergencyProposals[proposalId];
         proposal.proposalId = proposalId;
         proposal.proposer = msg.sender;
         proposal.evidence = evidence;
         proposal.evidenceHash = evidenceHash;
         proposal.proposedAt = block.timestamp;
-        proposal.timelock = block.timestamp + emergencyProposalTimelock;
+        proposal.timelock = block.timestamp + userTimelock;
         proposal.status = ProposalStatus.Pending;
         proposal.targetLevel = EmergencyLevel.Level1; // Start with Level 1
         proposal.zkProof = zkProof;
@@ -344,9 +542,12 @@ contract EmergencyManagement is
             revert InvalidEmergencyLevel(EmergencyLevel.Level1, currentEmergencyLevel);
         }
 
+        // Get user's grace period configuration
+        uint256 userGracePeriod = _getUserGracePeriod(owner());
+        
         // Check if grace period has passed
-        if (block.timestamp < lastOwnerResponse + OWNER_RESPONSE_GRACE_PERIOD) {
-            revert TimelockNotExpired(0, (lastOwnerResponse + OWNER_RESPONSE_GRACE_PERIOD) - block.timestamp);
+        if (block.timestamp < lastOwnerResponse + userGracePeriod) {
+            revert TimelockNotExpired(0, (lastOwnerResponse + userGracePeriod) - block.timestamp);
         }
 
         // Verify escalation authorization
@@ -406,9 +607,10 @@ contract EmergencyManagement is
             revert InvalidGuardianConfig("Proposal hash mismatch");
         }
 
-        // Check timelock (simplified - in full implementation would have proper timelock)
-        if (block.timestamp < guardianConfig.lastUpdated + guardianChangeTimelock) {
-            revert TimelockNotExpired(0, (guardianConfig.lastUpdated + guardianChangeTimelock) - block.timestamp);
+        // Check user's guardian change timelock
+        uint256 userGuardianChangeTimelock = _getUserGuardianChangeTimelock(msg.sender);
+        if (block.timestamp < guardianConfig.lastUpdated + userGuardianChangeTimelock) {
+            revert TimelockNotExpired(0, (guardianConfig.lastUpdated + userGuardianChangeTimelock) - block.timestamp);
         }
 
         // Update guardian configuration
@@ -600,6 +802,78 @@ contract EmergencyManagement is
         if (current == EmergencyLevel.Level1) return EmergencyLevel.Level2;
         if (current == EmergencyLevel.Level2) return EmergencyLevel.Level3;
         return current; // Level3 is maximum
+    }
+
+    /**
+     * @dev Initializes default timelock configuration
+     */
+    function _initializeDefaultTimelockConfig() internal {
+        defaultTimelockConfig.emergencyTimelock = 2 hours;
+        defaultTimelockConfig.guardianChangeTimelock = 48 hours;
+        defaultTimelockConfig.gracePeriod = 24 hours;
+        defaultTimelockConfig.levelSpecificTimelocks[EmergencyLevel.Level1] = 2 hours;
+        defaultTimelockConfig.levelSpecificTimelocks[EmergencyLevel.Level2] = 1 hours;
+        defaultTimelockConfig.levelSpecificTimelocks[EmergencyLevel.Level3] = 1 hours;
+        defaultTimelockConfig.dynamicAdjustmentEnabled = false;
+        defaultTimelockConfig.lastUpdated = block.timestamp;
+    }
+
+    /**
+     * @dev Gets user's emergency timelock or default
+     */
+    function _getUserEmergencyTimelock(address user) internal view returns (uint256) {
+        TimelockConfig storage config = userTimelockConfigs[user];
+        return config.emergencyTimelock > 0 ? 
+            config.emergencyTimelock : 
+            defaultTimelockConfig.emergencyTimelock;
+    }
+
+    /**
+     * @dev Gets user's guardian change timelock or default
+     */
+    function _getUserGuardianChangeTimelock(address user) internal view returns (uint256) {
+        TimelockConfig storage config = userTimelockConfigs[user];
+        return config.guardianChangeTimelock > 0 ? 
+            config.guardianChangeTimelock : 
+            defaultTimelockConfig.guardianChangeTimelock;
+    }
+
+    /**
+     * @dev Gets user's grace period or default
+     */
+    function _getUserGracePeriod(address user) internal view returns (uint256) {
+        TimelockConfig storage config = userTimelockConfigs[user];
+        return config.gracePeriod > 0 ? 
+            config.gracePeriod : 
+            defaultTimelockConfig.gracePeriod;
+    }
+
+    /**
+     * @dev Gets default timelock for emergency level
+     */
+    function _getDefaultTimelockForLevel(EmergencyLevel level) internal view returns (uint256) {
+        return defaultTimelockConfig.levelSpecificTimelocks[level];
+    }
+
+    /**
+     * @dev Validates timelock configuration bounds
+     */
+    function _validateTimelockBounds(
+        uint256 _emergencyTimelock,
+        uint256 _guardianChangeTimelock,
+        uint256 _gracePeriod
+    ) internal pure {
+        if (_emergencyTimelock < MIN_EMERGENCY_TIMELOCK || _emergencyTimelock > MAX_EMERGENCY_TIMELOCK) {
+            revert InvalidTimelockPeriod(_emergencyTimelock, MIN_EMERGENCY_TIMELOCK, MAX_EMERGENCY_TIMELOCK);
+        }
+        
+        if (_guardianChangeTimelock < MIN_GUARDIAN_CHANGE_TIMELOCK || _guardianChangeTimelock > MAX_GUARDIAN_CHANGE_TIMELOCK) {
+            revert InvalidTimelockPeriod(_guardianChangeTimelock, MIN_GUARDIAN_CHANGE_TIMELOCK, MAX_GUARDIAN_CHANGE_TIMELOCK);
+        }
+        
+        if (_gracePeriod < MIN_GRACE_PERIOD || _gracePeriod > MAX_GRACE_PERIOD) {
+            revert InvalidTimelockPeriod(_gracePeriod, MIN_GRACE_PERIOD, MAX_GRACE_PERIOD);
+        }
     }
 
     /**
