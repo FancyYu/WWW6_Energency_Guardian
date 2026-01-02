@@ -293,7 +293,7 @@ emergency-guardian/
 
 - [ ] 3. 零知识证明系统实现
 
-  - [ ] 3.1 设计和实现 ZK 电路
+  - [x] 3.1 设计和实现 ZK 电路
 
     - **技术栈**: Circom 2.0+, snarkjs, Node.js
     - **实现步骤**:

@@ -1,0 +1,69 @@
+{
+  "circuits": {
+    "identity": {
+      "name": "identity",
+      "description": "Guardian identity proof circuit with Merkle tree inclusion",
+      "inputs": {
+        "secret": "private guardian secret",
+        "nullifier": "unique nullifier to prevent double-spending",
+        "merkleRoot": "Merkle root of guardian registry",
+        "merkleProof": "Merkle inclusion proof",
+        "merkleIndex": "Index in Merkle tree"
+      },
+      "outputs": {
+        "nullifierHash": "Hash of nullifier for uniqueness",
+        "commitment": "Public commitment to guardian identity"
+      },
+      "constraints": "~1000",
+      "provingKeySize": "~50MB",
+      "verificationKeySize": "~2KB"
+    },
+    "emergency": {
+      "name": "emergency",
+      "description": "Emergency state proof circuit with commitment scheme",
+      "inputs": {
+        "emergencyType": "Type of emergency (1-5)",
+        "timestamp": "Emergency timestamp",
+        "userAddress": "User's Ethereum address",
+        "nonce": "Unique nonce for this emergency",
+        "secret": "User's secret for commitment"
+      },
+      "outputs": {
+        "emergencyHash": "Hash of emergency details",
+        "commitment": "Commitment to emergency state"
+      },
+      "constraints": "~800",
+      "provingKeySize": "~40MB",
+      "verificationKeySize": "~2KB"
+    },
+    "authorization": {
+      "name": "authorization",
+      "description": "Execution authorization proof circuit",
+      "inputs": {
+        "operationType": "Type of operation to authorize",
+        "targetAddress": "Target address for operation",
+        "amount": "Amount involved in operation",
+        "guardianSecret": "Guardian's authorization secret",
+        "timestamp": "Authorization timestamp"
+      },
+      "outputs": {
+        "authHash": "Authorization hash",
+        "operationCommitment": "Commitment to authorized operation"
+      },
+      "constraints": "~600",
+      "provingKeySize": "~30MB",
+      "verificationKeySize": "~2KB"
+    }
+  },
+  "security": {
+    "curve": "bn128",
+    "provingSystem": "groth16",
+    "fieldSize": "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+    "trustedSetup": "required"
+  },
+  "performance": {
+    "maxConstraints": 2000000,
+    "targetProvingTime": "5s",
+    "targetVerificationTime": "10ms"
+  }
+}
