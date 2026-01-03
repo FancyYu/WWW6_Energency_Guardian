@@ -11,11 +11,11 @@ include "circomlib/circuits/bitify.circom";
  */
 template EmergencyProof() {
     // Private inputs
-    signal private input emergencyType;   // Type of emergency (1-5)
-    signal private input timestamp;       // When emergency occurred
-    signal private input userSecret;      // User's secret for commitment
-    signal private input nonce;          // Unique nonce for this emergency
-    signal private input severity;        // Emergency severity level (1-10)
+    signal input emergencyType;   // Type of emergency (1-5)
+    signal input timestamp;       // When emergency occurred
+    signal input userSecret;      // User's secret for commitment
+    signal input nonce;          // Unique nonce for this emergency
+    signal input severity;        // Emergency severity level (1-10)
     
     // Public inputs
     signal input userAddress;            // User's Ethereum address (public)
@@ -107,22 +107,6 @@ template EmergencyProof() {
     poseidon4.inputs[0] <== emergencyHash;
     poseidon4.inputs[1] <== commitment;
     isValid <== poseidon4.out;
-}
-
-/**
- * @title IsZero
- * @dev Helper template to check if input is zero
- */
-template IsZero() {
-    signal input in;
-    signal output out;
-    
-    signal inv;
-    
-    inv <-- in != 0 ? 1/in : 0;
-    
-    out <== -in*inv + 1;
-    in*out === 0;
 }
 
 // Main component

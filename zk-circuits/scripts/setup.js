@@ -74,7 +74,7 @@ async function setup() {
 
         // Start new ceremony
         await snarkjs.powersOfTau.newAccumulator(
-          snarkjs.getCurveFromName("bn128"),
+          "bn128",
           15, // 2^15 = 32768 constraints
           path.join("keys", "pot15_0000.ptau")
         );

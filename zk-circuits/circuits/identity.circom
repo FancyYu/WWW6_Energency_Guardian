@@ -1,20 +1,21 @@
 pragma circom 2.1.6;
 
 include "circomlib/circuits/poseidon.circom";
-include "circomlib/circuits/merkletree.circom";
 include "circomlib/circuits/bitify.circom";
+include "circomlib/circuits/comparators.circom";
+include "circomlib/circuits/mux1.circom";
 
 /**
- * @title Guardian Identity Proof Circuit
+ * @title Guardian Identity Proof Circuit (Simplified)
  * @dev Proves guardian identity without revealing the actual guardian address
- * Uses Merkle tree inclusion proof to verify guardian is registered
+ * Uses simplified Merkle tree verification
  */
 template GuardianIdentity(levels) {
     // Private inputs
-    signal private input secret;           // Guardian's secret key
-    signal private input nullifier;       // Unique nullifier to prevent reuse
-    signal private input merkleProof[levels]; // Merkle inclusion proof
-    signal private input merkleIndex;     // Index in Merkle tree
+    signal input secret;           // Guardian's secret key
+    signal input nullifier;       // Unique nullifier to prevent reuse
+    signal input merkleProof[levels]; // Merkle inclusion proof
+    signal input merkleIndex;     // Index in Merkle tree
     
     // Public inputs
     signal input merkleRoot;              // Public Merkle root of guardian registry
@@ -28,8 +29,6 @@ template GuardianIdentity(levels) {
     // Components
     component poseidon1 = Poseidon(2);
     component poseidon2 = Poseidon(3);
-    component poseidon3 = Poseidon(2);
-    component merkleTree = MerkleTreeInclusionProof(levels);
     component num2Bits = Num2Bits(levels);
     
     // 1. Generate nullifier hash to prevent double-spending
@@ -43,21 +42,38 @@ template GuardianIdentity(levels) {
     poseidon2.inputs[2] <== nullifier;
     commitment <== poseidon2.out;
     
-    // 3. Verify Merkle tree inclusion
+    // 3. Simplified Merkle tree verification
     // Convert index to bits for Merkle proof
     num2Bits.in <== merkleIndex;
     
-    // Set up Merkle tree verification
-    merkleTree.leaf <== commitment;
-    merkleTree.root <== merkleRoot;
+    // Verify Merkle path (simplified version)
+    component merkleHashers[levels];
+    component merkleSelectors[levels];
+    
+    signal currentHash[levels + 1];
+    currentHash[0] <== commitment;
     
     for (var i = 0; i < levels; i++) {
-        merkleTree.pathElements[i] <== merkleProof[i];
-        merkleTree.pathIndices[i] <== num2Bits.out[i];
+        merkleHashers[i] = Poseidon(2);
+        merkleSelectors[i] = Mux1();
+        
+        // Select left or right based on path bit
+        merkleSelectors[i].c[0] <== currentHash[i];
+        merkleSelectors[i].c[1] <== merkleProof[i];
+        merkleSelectors[i].s <== num2Bits.out[i];
+        
+        // Hash with sibling
+        merkleHashers[i].inputs[0] <== merkleSelectors[i].out;
+        merkleHashers[i].inputs[1] <== merkleProof[i];
+        
+        currentHash[i + 1] <== merkleHashers[i].out;
     }
     
-    // 4. Verify the proof is valid
-    isValid <== merkleTree.root;
+    // 4. Verify the final hash matches the root
+    component rootCheck = IsEqual();
+    rootCheck.in[0] <== currentHash[levels];
+    rootCheck.in[1] <== merkleRoot;
+    isValid <== rootCheck.out;
     
     // 5. Constraint: nullifier must be non-zero to prevent trivial proofs
     component nullifierCheck = IsZero();
@@ -70,21 +86,7 @@ template GuardianIdentity(levels) {
     secretCheck.out === 0;
 }
 
-/**
- * @title IsZero
- * @dev Helper template to check if input is zero
- */
-template IsZero() {
-    signal input in;
-    signal output out;
-    
-    signal inv;
-    
-    inv <-- in != 0 ? 1/in : 0;
-    
-    out <== -in*inv + 1;
-    in*out === 0;
-}
+
 
 // Main component with 20 levels (supports up to 2^20 = ~1M guardians)
 component main = GuardianIdentity(20);

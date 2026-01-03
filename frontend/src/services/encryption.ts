@@ -1,0 +1,528 @@
+/**
+ * Encryption Service - 本地加密引擎
+ *
+ * 提供AES-256-GCM加密/解密、密钥管理、安全随机数生成等功能
+ * 支持Web Crypto API和Node.js crypto模块
+ */
+
+import { CryptoUtils } from "./crypto";
+
+// 加密算法配置
+export const ENCRYPTION_CONFIG = {
+  algorithm: "AES-GCM",
+  keyLength: 256, // bits
+  ivLength: 12, // bytes for GCM
+  tagLength: 16, // bytes for GCM
+  saltLength: 32, // bytes for key derivation
+  iterations: 100000, // PBKDF2 iterations
+} as const;
+
+// 加密数据结构
+export interface EncryptedData {
+  data: string; // Base64 encoded encrypted data
+  iv: string; // Base64 encoded initialization vector
+  salt: string; // Base64 encoded salt (for key derivation)
+  tag: string; // Base64 encoded authentication tag
+  algorithm: string; // Encryption algorithm used
+  keyDerivation: string; // Key derivation method
+  timestamp: number; // Encryption timestamp
+}
+
+// 密钥信息
+export interface KeyInfo {
+  id: string;
+  algorithm: string;
+  keyLength: number;
+  created: number;
+  lastUsed: number;
+  usage: string[];
+}
+
+// 加密选项
+export interface EncryptionOptions {
+  password?: string; // Password for key derivation
+  keyId?: string; // Existing key ID to use
+  additionalData?: string; // Additional authenticated data
+}
+
+// 解密选项
+export interface DecryptionOptions {
+  password?: string; // Password for key derivation
+  keyId?: string; // Key ID to use
+  additionalData?: string; // Additional authenticated data for verification
+}
+
+// 存储的密钥数据结构
+interface StoredKeyData {
+  id: string;
+  key: CryptoKey;
+  algorithm: string;
+  keyLength: number;
+  created: number;
+  lastUsed: number;
+  usage: string[];
+}
+
+/**
+ * 密钥管理器
+ */
+export class KeyManager {
+  private static readonly STORAGE_KEY = "emergency_guardian_keys";
+  private keys: Map<string, StoredKeyData> = new Map();
+
+  constructor() {
+    this.loadKeys();
+  }
+
+  /**
+   * 存储密钥
+   * @param key 加密密钥
+   * @param keyId 可选的密钥ID
+   * @returns 密钥信息
+   */
+  async storeKey(key: CryptoKey, keyId?: string): Promise<KeyInfo> {
+    const id = keyId || this.generateKeyId();
+    const now = Date.now();
+
+    const keyData: StoredKeyData = {
+      id,
+      key,
+      algorithm: key.algorithm.name,
+      keyLength: (key.algorithm as any).length || 256,
+      created: now,
+      lastUsed: now,
+      usage: key.usages,
+    };
+
+    this.keys.set(id, keyData);
+    await this.saveKeys();
+
+    return {
+      id: keyData.id,
+      algorithm: keyData.algorithm,
+      keyLength: keyData.keyLength,
+      created: keyData.created,
+      lastUsed: keyData.lastUsed,
+      usage: keyData.usage,
+    };
+  }
+
+  /**
+   * 获取密钥
+   * @param keyId 密钥ID
+   * @returns 密钥数据
+   */
+  async getKey(keyId: string): Promise<StoredKeyData | null> {
+    const keyData = this.keys.get(keyId);
+    if (!keyData) return null;
+
+    // 更新最后使用时间
+    keyData.lastUsed = Date.now();
+    await this.saveKeys();
+
+    return keyData;
+  }
+
+  /**
+   * 删除密钥
+   * @param keyId 密钥ID
+   * @returns 是否成功删除
+   */
+  async deleteKey(keyId: string): Promise<boolean> {
+    const deleted = this.keys.delete(keyId);
+    if (deleted) {
+      await this.saveKeys();
+    }
+    return deleted;
+  }
+
+  /**
+   * 列出所有密钥信息
+   * @returns 密钥信息列表
+   */
+  async listKeys(): Promise<KeyInfo[]> {
+    return Array.from(this.keys.values()).map((keyData) => ({
+      id: keyData.id,
+      algorithm: keyData.algorithm,
+      keyLength: keyData.keyLength,
+      created: keyData.created,
+      lastUsed: keyData.lastUsed,
+      usage: keyData.usage,
+    }));
+  }
+
+  /**
+   * 清理过期密钥
+   * @param maxAge 最大年龄（毫秒）
+   * @returns 清理的密钥数量
+   */
+  async cleanupExpiredKeys(maxAge: number): Promise<number> {
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const [keyId, keyData] of this.keys.entries()) {
+      if (now - keyData.lastUsed > maxAge) {
+        this.keys.delete(keyId);
+        cleanedCount++;
+      }
+    }
+
+    if (cleanedCount > 0) {
+      await this.saveKeys();
+    }
+
+    return cleanedCount;
+  }
+
+  /**
+   * 生成密钥ID
+   * @returns 唯一的密钥ID
+   */
+  private generateKeyId(): string {
+    return `key_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * 从本地存储加载密钥
+   */
+  private loadKeys(): void {
+    try {
+      const stored = localStorage.getItem(KeyManager.STORAGE_KEY);
+      if (stored) {
+        // 注意：实际的CryptoKey对象无法序列化，这里需要重新导入
+        // 在实际应用中，可能需要使用IndexedDB或其他方式存储密钥
+        console.warn("Key loading from localStorage is not fully implemented");
+      }
+    } catch (error) {
+      console.error("Failed to load keys from storage:", error);
+    }
+  }
+
+  /**
+   * 保存密钥到本地存储
+   */
+  private async saveKeys(): Promise<void> {
+    try {
+      // 注意：CryptoKey对象无法直接序列化
+      // 在实际应用中，需要导出密钥为可序列化格式
+      const serializable = Array.from(this.keys.entries()).map(
+        ([id, keyData]) => ({
+          id,
+          algorithm: keyData.algorithm,
+          keyLength: keyData.keyLength,
+          created: keyData.created,
+          lastUsed: keyData.lastUsed,
+          usage: keyData.usage,
+          // key: 需要导出为JWK或其他格式
+        })
+      );
+
+      localStorage.setItem(
+        KeyManager.STORAGE_KEY,
+        JSON.stringify(serializable)
+      );
+    } catch (error) {
+      console.error("Failed to save keys to storage:", error);
+    }
+  }
+}
+
+/**
+ * 主加密服务类
+ */
+export class EncryptionService {
+  private keyManager: KeyManager;
+  private cryptoUtils: CryptoUtils;
+
+  constructor() {
+    this.keyManager = new KeyManager();
+    this.cryptoUtils = new CryptoUtils();
+  }
+
+  /**
+   * 加密数据
+   * @param data 要加密的数据
+   * @param options 加密选项
+   * @returns 加密后的数据结构
+   */
+  async encrypt(
+    data: string,
+    options: EncryptionOptions = {}
+  ): Promise<EncryptedData> {
+    try {
+      // 生成或获取加密密钥
+      let key: CryptoKey;
+      let salt: Uint8Array;
+
+      if (options.keyId) {
+        // 使用现有密钥
+        const keyInfo = await this.keyManager.getKey(options.keyId);
+        if (!keyInfo) {
+          throw new Error(`Key not found: ${options.keyId}`);
+        }
+        key = keyInfo.key;
+        salt = new Uint8Array(); // 现有密钥不需要salt
+      } else if (options.password) {
+        // 从密码派生密钥
+        salt = this.cryptoUtils.generateRandomBytes(
+          ENCRYPTION_CONFIG.saltLength
+        );
+        key = await this.cryptoUtils.deriveKeyFromPassword(
+          options.password,
+          salt,
+          ENCRYPTION_CONFIG.iterations
+        );
+      } else {
+        // 生成新的随机密钥
+        key = await this.cryptoUtils.generateKey();
+        salt = new Uint8Array(); // 随机密钥不需要salt
+      }
+
+      // 生成初始化向量
+      const iv = this.cryptoUtils.generateRandomBytes(
+        ENCRYPTION_CONFIG.ivLength
+      );
+
+      // 准备要加密的数据
+      const encoder = new TextEncoder();
+      const dataBytes = encoder.encode(data);
+
+      // 准备额外认证数据
+      let additionalData: Uint8Array | undefined;
+      if (options.additionalData) {
+        additionalData = encoder.encode(options.additionalData);
+      }
+
+      // 执行加密
+      const encryptedBuffer = await crypto.subtle.encrypt(
+        {
+          name: ENCRYPTION_CONFIG.algorithm,
+          iv: new Uint8Array(iv),
+          additionalData: additionalData
+            ? new Uint8Array(additionalData)
+            : undefined,
+        },
+        key,
+        dataBytes
+      );
+
+      // 分离加密数据和认证标签
+      const encryptedBytes = new Uint8Array(encryptedBuffer);
+      const encryptedData = encryptedBytes.slice(
+        0,
+        -ENCRYPTION_CONFIG.tagLength
+      );
+      const tag = encryptedBytes.slice(-ENCRYPTION_CONFIG.tagLength);
+
+      // 构建返回结果
+      const result: EncryptedData = {
+        data: this.cryptoUtils.arrayBufferToBase64(encryptedData),
+        iv: this.cryptoUtils.arrayBufferToBase64(iv),
+        salt: this.cryptoUtils.arrayBufferToBase64(salt),
+        tag: this.cryptoUtils.arrayBufferToBase64(tag),
+        algorithm: ENCRYPTION_CONFIG.algorithm,
+        keyDerivation: options.password ? "PBKDF2" : "RANDOM",
+        timestamp: Date.now(),
+      };
+
+      return result;
+    } catch (error) {
+      throw new Error(
+        `Encryption failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  /**
+   * 解密数据
+   * @param encryptedData 加密的数据结构
+   * @param options 解密选项
+   * @returns 解密后的原始数据
+   */
+  async decrypt(
+    encryptedData: EncryptedData,
+    options: DecryptionOptions = {}
+  ): Promise<string> {
+    try {
+      // 验证加密数据结构
+      this.validateEncryptedData(encryptedData);
+
+      // 获取或派生解密密钥
+      let key: CryptoKey;
+
+      if (options.keyId) {
+        // 使用指定密钥
+        const keyInfo = await this.keyManager.getKey(options.keyId);
+        if (!keyInfo) {
+          throw new Error(`Key not found: ${options.keyId}`);
+        }
+        key = keyInfo.key;
+      } else if (options.password && encryptedData.keyDerivation === "PBKDF2") {
+        // 从密码派生密钥
+        const salt = this.cryptoUtils.base64ToArrayBuffer(encryptedData.salt);
+        key = await this.cryptoUtils.deriveKeyFromPassword(
+          options.password,
+          new Uint8Array(salt),
+          ENCRYPTION_CONFIG.iterations
+        );
+      } else {
+        throw new Error("No valid key or password provided for decryption");
+      }
+
+      // 准备解密数据
+      const iv = this.cryptoUtils.base64ToArrayBuffer(encryptedData.iv);
+      const data = this.cryptoUtils.base64ToArrayBuffer(encryptedData.data);
+      const tag = this.cryptoUtils.base64ToArrayBuffer(encryptedData.tag);
+
+      // 合并加密数据和认证标签
+      const encryptedBuffer = new Uint8Array(data.byteLength + tag.byteLength);
+      encryptedBuffer.set(new Uint8Array(data), 0);
+      encryptedBuffer.set(new Uint8Array(tag), data.byteLength);
+
+      // 准备额外认证数据
+      let additionalData: Uint8Array | undefined;
+      if (options.additionalData) {
+        const encoder = new TextEncoder();
+        additionalData = encoder.encode(options.additionalData);
+      }
+
+      // 执行解密
+      const decryptedBuffer = await crypto.subtle.decrypt(
+        {
+          name: encryptedData.algorithm,
+          iv: new Uint8Array(iv),
+          additionalData: additionalData
+            ? new Uint8Array(additionalData)
+            : undefined,
+        },
+        key,
+        encryptedBuffer
+      );
+
+      // 转换为字符串
+      const decoder = new TextDecoder();
+      return decoder.decode(decryptedBuffer);
+    } catch (error) {
+      throw new Error(
+        `Decryption failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  /**
+   * 生成新的加密密钥
+   * @param keyId 可选的密钥ID
+   * @returns 密钥信息
+   */
+  async generateKey(keyId?: string): Promise<KeyInfo> {
+    const key = await this.cryptoUtils.generateKey();
+    return await this.keyManager.storeKey(key, keyId);
+  }
+
+  /**
+   * 从密码派生密钥
+   * @param password 密码
+   * @param keyId 可选的密钥ID
+   * @returns 密钥信息
+   */
+  async deriveKeyFromPassword(
+    password: string,
+    keyId?: string
+  ): Promise<KeyInfo> {
+    const salt = this.cryptoUtils.generateRandomBytes(
+      ENCRYPTION_CONFIG.saltLength
+    );
+    const key = await this.cryptoUtils.deriveKeyFromPassword(
+      password,
+      salt,
+      ENCRYPTION_CONFIG.iterations
+    );
+    return await this.keyManager.storeKey(key, keyId);
+  }
+
+  /**
+   * 获取密钥信息
+   * @param keyId 密钥ID
+   * @returns 密钥信息
+   */
+  async getKeyInfo(keyId: string): Promise<KeyInfo | null> {
+    const keyData = await this.keyManager.getKey(keyId);
+    if (!keyData) return null;
+
+    return {
+      id: keyData.id,
+      algorithm: keyData.algorithm,
+      keyLength: keyData.keyLength,
+      created: keyData.created,
+      lastUsed: keyData.lastUsed,
+      usage: keyData.usage,
+    };
+  }
+
+  /**
+   * 删除密钥
+   * @param keyId 密钥ID
+   * @returns 是否成功删除
+   */
+  async deleteKey(keyId: string): Promise<boolean> {
+    return await this.keyManager.deleteKey(keyId);
+  }
+
+  /**
+   * 列出所有密钥
+   * @returns 密钥信息列表
+   */
+  async listKeys(): Promise<KeyInfo[]> {
+    return await this.keyManager.listKeys();
+  }
+
+  /**
+   * 验证加密数据结构
+   * @param data 加密数据
+   */
+  private validateEncryptedData(data: EncryptedData): void {
+    const required = [
+      "data",
+      "iv",
+      "salt",
+      "tag",
+      "algorithm",
+      "keyDerivation",
+      "timestamp",
+    ];
+    for (const field of required) {
+      if (!(field in data)) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    // 验证算法
+    if (data.algorithm !== ENCRYPTION_CONFIG.algorithm) {
+      throw new Error(`Unsupported algorithm: ${data.algorithm}`);
+    }
+
+    // 验证时间戳（防止过期数据）
+    const maxAge = 24 * 60 * 60 * 1000; // 24小时
+    if (Date.now() - data.timestamp > maxAge) {
+      console.warn("Encrypted data is older than 24 hours");
+    }
+  }
+
+  /**
+   * 清理过期密钥
+   * @param maxAge 最大年龄（毫秒）
+   * @returns 清理的密钥数量
+   */
+  async cleanupExpiredKeys(
+    maxAge: number = 30 * 24 * 60 * 60 * 1000
+  ): Promise<number> {
+    return await this.keyManager.cleanupExpiredKeys(maxAge);
+  }
+}
+
+// 默认导出加密服务实例
+export const encryptionService = new EncryptionService();

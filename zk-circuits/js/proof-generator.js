@@ -53,7 +53,7 @@ class ZKProofGenerator {
       const zkeyPath = path.join(
         this.keysPath,
         "identity",
-        "identity_final.zkey"
+        "identity_mock.zkey"
       );
 
       // Generate witness
@@ -123,7 +123,7 @@ class ZKProofGenerator {
       const zkeyPath = path.join(
         this.keysPath,
         "emergency",
-        "emergency_final.zkey"
+        "emergency_mock.zkey"
       );
 
       // Generate proof
@@ -193,7 +193,7 @@ class ZKProofGenerator {
       const zkeyPath = path.join(
         this.keysPath,
         "authorization",
-        "authorization_final.zkey"
+        "authorization_mock.zkey"
       );
 
       // Generate proof

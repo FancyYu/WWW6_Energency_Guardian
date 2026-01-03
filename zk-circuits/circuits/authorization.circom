@@ -11,10 +11,10 @@ include "circomlib/circuits/bitify.circom";
  */
 template AuthorizationProof() {
     // Private inputs
-    signal private input guardianSecret;     // Guardian's authorization secret
-    signal private input operationType;      // Type of operation (1-10)
-    signal private input authNonce;         // Unique authorization nonce
-    signal private input guardianIndex;     // Guardian's index in registry
+    signal input guardianSecret;     // Guardian's authorization secret
+    signal input operationType;      // Type of operation (1-10)
+    signal input authNonce;         // Unique authorization nonce
+    signal input guardianIndex;     // Guardian's index in registry
     
     // Public inputs
     signal input targetAddress;             // Target address for operation
@@ -124,21 +124,7 @@ template AuthorizationProof() {
     highValueCheck.out === 1;
 }
 
-/**
- * @title IsZero
- * @dev Helper template to check if input is zero
- */
-template IsZero() {
-    signal input in;
-    signal output out;
-    
-    signal inv;
-    
-    inv <-- in != 0 ? 1/in : 0;
-    
-    out <== -in*inv + 1;
-    in*out === 0;
-}
+
 
 // Main component
 component main = AuthorizationProof();
