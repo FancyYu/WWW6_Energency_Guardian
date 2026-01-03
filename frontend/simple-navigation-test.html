@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>简单导航测试</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+      }
+      .test-button {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      .test-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚨 Emergency Guardian 导航测试</h1>
+      <p>点击按钮测试导航功能是否正常工作</p>
+
+      <button class="test-button" onclick="testEmergencyNavigation()">
+        🚨 测试紧急求助导航
+      </button>
+
+      <button
+        class="test-button"
+        onclick="openMainApp()"
+        style="background: linear-gradient(135deg, #3b82f6, #1d4ed8)"
+      >
+        🏠 打开主应用
+      </button>
+
+      <div id="result" class="result" style="display: none">
+        <h3>测试结果</h3>
+        <div id="result-content"></div>
+      </div>
+    </div>
+
+    <script>
+      function showResult(message, isSuccess = true) {
+        const resultDiv = document.getElementById("result");
+        const contentDiv = document.getElementById("result-content");
+
+        contentDiv.innerHTML = `
+                <div style="color: ${isSuccess ? "#22c55e" : "#ef4444"}">
+                    ${isSuccess ? "✅" : "❌"} ${message}
+                </div>
+            `;
+
+        resultDiv.style.display = "block";
+      }
+
+      function testEmergencyNavigation() {
+        console.log("开始测试紧急求助导航...");
+
+        // 直接打开紧急页面
+        const emergencyUrl = "http://localhost:5173/emergency";
+        const testWindow = window.open(
+          emergencyUrl,
+          "_blank",
+          "width=1200,height=800"
+        );
+
+        if (testWindow) {
+          showResult(
+            "已打开紧急页面，请检查页面是否正确显示紧急操作中心",
+            true
+          );
+
+          // 等待一段时间后检查窗口状态
+          setTimeout(() => {
+            if (!testWindow.closed) {
+              console.log("紧急页面仍在运行，导航成功");
+            }
+          }, 2000);
+        } else {
+          showResult("无法打开紧急页面，可能被浏览器阻止弹窗", false);
+        }
+      }
+
+      function openMainApp() {
+        console.log("打开主应用...");
+
+        const mainUrl = "http://localhost:5173/";
+        const testWindow = window.open(
+          mainUrl,
+          "_blank",
+          "width=1200,height=800"
+        );
+
+        if (testWindow) {
+          showResult("已打开主应用，请尝试点击紧急求助按钮测试导航", true);
+        } else {
+          showResult("无法打开主应用，可能被浏览器阻止弹窗", false);
+        }
+      }
+
+      // 页面加载完成后的初始化
+      window.addEventListener("load", () => {
+        console.log("导航测试页面已加载");
+        console.log("请确保前端应用在 http://localhost:5173 运行");
+      });
+    </script>
+  </body>
+</html>

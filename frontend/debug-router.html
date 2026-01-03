@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>路由调试工具</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      .emergency-btn {
+        background: #dc2626;
+      }
+      .emergency-btn:hover {
+        background: #b91c1c;
+      }
+      .logs {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .info {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      iframe {
+        width: 100%;
+        height: 500px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Emergency Guardian - 路由调试工具</h1>
+
+    <div class="container">
+      <h2>🔍 路由状态检查</h2>
+      <div id="routeStatus" class="status info">检查中...</div>
+
+      <h3>测试路由导航</h3>
+      <button onclick="testRoute('dashboard')">Dashboard</button>
+      <button onclick="testRoute('emergency')" class="emergency-btn">
+        Emergency
+      </button>
+      <button onclick="testRoute('guardians')">Guardians</button>
+      <button onclick="testRoute('settings')">Settings</button>
+      <button onclick="testRoute('activities')">Activities</button>
+
+      <h3>直接URL测试</h3>
+      <button onclick="openDirectURL('emergency')">直接打开 /emergency</button>
+      <button onclick="openDirectURL('guardians')">直接打开 /guardians</button>
+      <button onclick="openDirectURL('settings')">直接打开 /settings</button>
+
+      <h3>主应用内嵌测试</h3>
+      <button onclick="reloadIframe()">重新加载主应用</button>
+      <button onclick="testClickInIframe()">模拟点击紧急求助</button>
+    </div>
+
+    <div class="container">
+      <h2>🖥️ 主应用预览</h2>
+      <iframe src="http://localhost:5173" id="mainAppFrame"></iframe>
+    </div>
+
+    <div class="container">
+      <h2>📝 调试日志</h2>
+      <div id="logs" class="logs">路由调试工具已加载...</div>
+      <button onclick="clearLogs()">清除日志</button>
+    </div>
+
+    <script>
+      function log(message, type = "info") {
+        const logsDiv = document.getElementById("logs");
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix =
+          type === "error"
+            ? "❌"
+            : type === "success"
+            ? "✅"
+            : type === "warning"
+            ? "⚠️"
+            : "ℹ️";
+        logsDiv.innerHTML += `\n[${timestamp}] ${prefix} ${message}`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+        console.log(message);
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "日志已清除";
+      }
+
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("routeStatus");
+        statusDiv.innerHTML = message;
+        statusDiv.className = `status ${type}`;
+      }
+
+      async function testRoute(route) {
+        try {
+          log(`测试路由: /${route}`, "info");
+
+          // 尝试直接访问路由
+          const response = await fetch(`http://localhost:5173/${route}`);
+
+          if (response.ok) {
+            const html = await response.text();
+
+            if (html.includes("<!doctype html>")) {
+              log(`路由 /${route} 访问成功`, "success");
+              updateStatus(`路由 /${route} 可访问`, "success");
+
+              // 检查是否包含React应用
+              if (html.includes("root")) {
+                log("检测到React根元素", "success");
+              }
+            } else {
+              log(`路由 /${route} 返回异常内容`, "error");
+            }
+          } else {
+            log(`路由 /${route} 返回 HTTP ${response.status}`, "error");
+          }
+        } catch (error) {
+          log(`路由测试失败: ${error.message}`, "error");
+          updateStatus(`路由测试失败: ${error.message}`, "error");
+        }
+      }
+
+      function openDirectURL(route) {
+        log(`直接打开 /${route}`, "info");
+        const newWindow = window.open(
+          `http://localhost:5173/${route}`,
+          "_blank"
+        );
+
+        if (newWindow) {
+          log(`新窗口已打开: /${route}`, "success");
+        } else {
+          log("无法打开新窗口，可能被浏览器阻止", "error");
+        }
+      }
+
+      function reloadIframe() {
+        log("重新加载主应用iframe", "info");
+        const iframe = document.getElementById("mainAppFrame");
+        iframe.src = iframe.src;
+      }
+
+      function testClickInIframe() {
+        log("尝试在iframe中模拟点击...", "info");
+
+        try {
+          const iframe = document.getElementById("mainAppFrame");
+          const iframeDoc =
+            iframe.contentDocument || iframe.contentWindow.document;
+
+          // 尝试找到紧急求助按钮
+          const emergencyButton =
+            iframeDoc.querySelector('[data-testid="emergency-button"]') ||
+            iframeDoc.querySelector('button:contains("紧急求助")') ||
+            iframeDoc.querySelector('button[class*="emergency"]');
+
+          if (emergencyButton) {
+            emergencyButton.click();
+            log("成功点击紧急求助按钮", "success");
+          } else {
+            log("未找到紧急求助按钮，可能由于跨域限制", "warning");
+          }
+        } catch (error) {
+          log(`iframe操作失败: ${error.message}`, "error");
+          log("这通常是由于跨域安全限制导致的", "info");
+        }
+      }
+
+      // 监听iframe的消息
+      window.addEventListener("message", (event) => {
+        if (event.origin === "http://localhost:5173") {
+          log(`收到iframe消息: ${JSON.stringify(event.data)}`, "info");
+        }
+      });
+
+      // 页面加载时的初始化
+      window.addEventListener("load", () => {
+        log("路由调试工具已加载", "info");
+
+        // 检查当前URL
+        const currentPath = window.location.pathname;
+        log(`当前页面路径: ${currentPath}`, "info");
+
+        // 自动测试dashboard路由
+        setTimeout(() => {
+          testRoute("dashboard");
+        }, 1000);
+
+        // 监听iframe加载
+        const iframe = document.getElementById("mainAppFrame");
+        iframe.addEventListener("load", () => {
+          log("主应用iframe加载完成", "success");
+
+          // 尝试检查iframe内容
+          try {
+            const iframeDoc =
+              iframe.contentDocument || iframe.contentWindow.document;
+            const title = iframeDoc.title;
+            log(`iframe页面标题: ${title}`, "info");
+          } catch (error) {
+            log("无法访问iframe内容（跨域限制）", "warning");
+          }
+        });
+
+        iframe.addEventListener("error", () => {
+          log("主应用iframe加载失败", "error");
+        });
+      });
+
+      // 定期检查iframe状态
+      setInterval(() => {
+        const iframe = document.getElementById("mainAppFrame");
+        try {
+          const iframeWindow = iframe.contentWindow;
+          if (iframeWindow && iframeWindow.location) {
+            const currentRoute = iframeWindow.location.pathname;
+            if (currentRoute !== "/") {
+              updateStatus(`当前路由: ${currentRoute}`, "success");
+            }
+          }
+        } catch (error) {
+          // 跨域限制，忽略错误
+        }
+      }, 2000);
+    </script>
+  </body>
+</html>

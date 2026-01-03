@@ -8,7 +8,7 @@ import { RecentActivity } from "./RecentActivity";
 import { GuardianStatus } from "./GuardianStatus";
 import { GlassCard, GlassButton } from "../Glass";
 import { useStats, useAppStore } from "../../store";
-import { useRouter } from "../../hooks/useRouter";
+import { useRouter } from "../../context/RouterContext";
 import type { DashboardStats } from "../../types";
 
 // Icons
@@ -178,7 +178,10 @@ export const Dashboard: React.FC = () => {
               variant="emergency"
               size="lg"
               glow
-              onClick={() => navigate("emergency")}
+              onClick={() => {
+                console.log("Emergency button clicked!");
+                navigate("emergency");
+              }}
               className="h-auto p-6 flex-col items-start text-left"
             >
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-emergency-500/20 text-emergency-400 mb-4">
@@ -198,7 +201,10 @@ export const Dashboard: React.FC = () => {
               variant="primary"
               size="lg"
               glow
-              onClick={() => navigate("guardians")}
+              onClick={() => {
+                console.log("Guardians button clicked!");
+                navigate("guardians");
+              }}
               className="h-auto p-6 flex-col items-start text-left"
             >
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary-500/20 text-primary-400 mb-4">
@@ -218,7 +224,10 @@ export const Dashboard: React.FC = () => {
               variant="success"
               size="lg"
               glow
-              onClick={() => navigate("settings")}
+              onClick={() => {
+                console.log("Settings button clicked!");
+                navigate("settings");
+              }}
               className="h-auto p-6 flex-col items-start text-left"
             >
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-success-500/20 text-success-400 mb-4">

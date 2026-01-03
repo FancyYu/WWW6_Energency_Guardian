@@ -4,7 +4,7 @@
 
 import React from "react";
 import { Card, CardHeader, CardContent, Badge } from "../Common";
-import type { ActivityLog } from "../../types";
+import { useActivities } from "../../store";
 
 const ActivityIcon: React.FC<{ type: string }> = ({ type }) => {
   switch (type) {
@@ -116,9 +116,12 @@ const getActivityBadgeVariant = (type: string) => {
   }
 };
 
-const formatRelativeTime = (date: Date) => {
+const formatRelativeTime = (date: Date | string) => {
+  // 确保 date 是 Date 对象
+  const dateObj = date instanceof Date ? date : new Date(date);
+
   const now = new Date();
-  const diff = now.getTime() - date.getTime();
+  const diff = now.getTime() - dateObj.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
@@ -134,40 +137,8 @@ const formatRelativeTime = (date: Date) => {
   }
 };
 
-// Mock data for demonstration
-const mockActivities: ActivityLog[] = [
-  {
-    id: "1",
-    type: "emergency_created",
-    description: "创建了新的紧急情况：医疗紧急",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-    txHash: "0x1234...5678",
-  },
-  {
-    id: "2",
-    type: "guardian_added",
-    description: "添加了新监护人：Alice",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-  },
-  {
-    id: "3",
-    type: "emergency_approved",
-    description: "紧急情况获得批准：医疗紧急",
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-    txHash: "0xabcd...efgh",
-  },
-  {
-    id: "4",
-    type: "emergency_executed",
-    description: "执行紧急操作：转账 5.5 ETH",
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    txHash: "0x9876...5432",
-  },
-];
-
 export const RecentActivity: React.FC = () => {
-  // In a real app, this would come from the store
-  const activities = mockActivities;
+  const activities = useActivities();
 
   return (
     <Card>
@@ -184,55 +155,79 @@ export const RecentActivity: React.FC = () => {
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="flow-root">
-          <ul className="divide-y divide-gray-200">
-            {activities.map((activity) => (
-              <li key={activity.id} className="px-6 py-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <ActivityIcon type={activity.type} />
-                  </div>
+        {activities.length > 0 ? (
+          <div className="flow-root">
+            <ul className="divide-y divide-gray-200">
+              {activities.slice(0, 5).map((activity) => (
+                <li key={activity.id} className="px-6 py-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      <ActivityIcon type={activity.type} />
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
-                      {activity.description}
-                    </p>
-                    <div className="flex items-center mt-1 space-x-2">
-                      <p className="text-xs text-gray-500">
-                        {formatRelativeTime(activity.timestamp)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">
+                        {activity.description}
                       </p>
-                      {activity.txHash && (
-                        <>
-                          <span className="text-xs text-gray-300">•</span>
-                          <a
-                            href={`https://etherscan.io/tx/${activity.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary-600 hover:text-primary-500"
-                          >
-                            查看交易
-                          </a>
-                        </>
-                      )}
+                      <div className="flex items-center mt-1 space-x-2">
+                        <p className="text-xs text-gray-500">
+                          {formatRelativeTime(activity.timestamp)}
+                        </p>
+                        {activity.txHash && (
+                          <>
+                            <span className="text-xs text-gray-300">•</span>
+                            <a
+                              href={`https://etherscan.io/tx/${activity.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 hover:text-primary-500"
+                            >
+                              查看交易
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                      <Badge
+                        variant={getActivityBadgeVariant(activity.type)}
+                        size="sm"
+                      >
+                        {activity.type === "emergency_created" && "紧急"}
+                        {activity.type === "guardian_added" && "监护人"}
+                        {activity.type === "emergency_approved" && "批准"}
+                        {activity.type === "emergency_executed" && "执行"}
+                      </Badge>
                     </div>
                   </div>
-
-                  <div className="flex-shrink-0">
-                    <Badge
-                      variant={getActivityBadgeVariant(activity.type)}
-                      size="sm"
-                    >
-                      {activity.type === "emergency_created" && "紧急"}
-                      {activity.type === "guardian_added" && "监护人"}
-                      {activity.type === "emergency_approved" && "批准"}
-                      {activity.type === "emergency_executed" && "执行"}
-                    </Badge>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="px-6 py-8 text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              暂无活动记录
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              当您开始使用系统时，活动记录将显示在这里。
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

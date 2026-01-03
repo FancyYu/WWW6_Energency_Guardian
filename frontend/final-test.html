@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Final Navigation Test</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #1e3a8a, #7c3aed, #dc2626);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .header h1 {
+        font-size: 2.5rem;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .big-button {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        padding: 25px 50px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px;
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        transition: all 0.3s;
+        display: block;
+        width: 100%;
+        max-width: 400px;
+        margin: 20px auto;
+      }
+      .big-button:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+      }
+      .fix-info {
+        background: linear-gradient(
+          135deg,
+          rgba(16, 185, 129, 0.2),
+          rgba(34, 197, 94, 0.2)
+        );
+        padding: 25px;
+        border-radius: 15px;
+        margin: 30px 0;
+        border: 2px solid rgba(16, 185, 129, 0.3);
+      }
+      .fix-info h3 {
+        margin: 0 0 15px 0;
+        color: #34d399;
+        font-size: 1.5rem;
+      }
+      .instructions {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 25px;
+        border-radius: 15px;
+        margin: 30px 0;
+        border-left: 5px solid #fbbf24;
+      }
+      .instructions h3 {
+        margin: 0 0 20px 0;
+        color: #fbbf24;
+        font-size: 1.3rem;
+      }
+      .instructions ol {
+        margin: 0;
+        padding-left: 25px;
+      }
+      .instructions li {
+        margin: 12px 0;
+        line-height: 1.6;
+        font-size: 1.1rem;
+      }
+      .status {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .status-item {
+        display: inline-block;
+        margin: 10px 20px;
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .success {
+        color: #10b981;
+      }
+      .error {
+        color: #ef4444;
+      }
+      .warning {
+        color: #f59e0b;
+      }
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚨 Emergency Guardian</h1>
+        <p style="font-size: 1.2rem; margin: 10px 0">Final Navigation Test</p>
+      </div>
+
+      <div class="fix-info">
+        <h3>🔧 Latest Navigation Fix Applied</h3>
+        <p>
+          <strong>使用事件驱动的路由系统</strong> -
+          完全重写了路由逻辑，使用自定义事件来确保组件正确更新。
+        </p>
+        <ul style="margin: 15px 0; padding-left: 25px">
+          <li>✅ 事件驱动的路由变化通知</li>
+          <li>✅ 移除所有React状态依赖问题</li>
+          <li>✅ 简化的导航逻辑</li>
+          <li>✅ 强制组件重新渲染</li>
+          <li>✅ 浏览器前进后退支持</li>
+        </ul>
+      </div>
+
+      <div class="status">
+        <div class="status-item">
+          <strong>服务器状态:</strong>
+          <span id="server-status" class="warning">检测中...</span>
+        </div>
+        <div class="status-item">
+          <strong>修复状态:</strong> <span class="success">✅ 已应用</span>
+        </div>
+      </div>
+
+      <button class="big-button pulse" onclick="startTest()">
+        🚀 开始最终测试
+      </button>
+
+      <div class="instructions">
+        <h3>📋 最终测试步骤</h3>
+        <ol>
+          <li><strong>点击上方按钮</strong> - 这将打开主应用</li>
+          <li><strong>等待应用完全加载</strong> - 应该看到仪表板页面</li>
+          <li><strong>打开浏览器开发者工具</strong> - 按 F12 键</li>
+          <li><strong>点击"紧急求助"按钮</strong> - 红色的大按钮</li>
+          <li>
+            <strong>验证以下内容</strong>：
+            <ul style="margin: 10px 0; padding-left: 25px">
+              <li>URL 变为 <code>/emergency</code></li>
+              <li>页面内容切换到"紧急操作中心"</li>
+              <li>控制台显示路由变化日志</li>
+              <li>页面标题显示"紧急操作中心"</li>
+            </ul>
+          </li>
+          <li>
+            <strong>测试其他导航</strong> - 尝试点击其他按钮（监护人、设置等）
+          </li>
+          <li><strong>测试浏览器后退</strong> - 使用浏览器后退按钮</li>
+        </ol>
+      </div>
+
+      <div
+        style="
+          text-align: center;
+          margin-top: 40px;
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        "
+      >
+        <h3 style="color: #fbbf24">🎯 Expected Result</h3>
+        <p style="font-size: 1.1rem">
+          点击"紧急求助"按钮后，页面应该<strong>立即</strong>切换到紧急操作中心，无需刷新页面。
+        </p>
+      </div>
+    </div>
+
+    <script>
+      function checkServerStatus() {
+        fetch("http://localhost:5173/")
+          .then((response) => {
+            if (response.ok) {
+              document.getElementById("server-status").textContent =
+                "✅ 运行中";
+              document.getElementById("server-status").className = "success";
+            } else {
+              document.getElementById("server-status").textContent = "❌ 错误";
+              document.getElementById("server-status").className = "error";
+            }
+          })
+          .catch((error) => {
+            document.getElementById("server-status").textContent = "❌ 离线";
+            document.getElementById("server-status").className = "error";
+          });
+      }
+
+      function startTest() {
+        console.log("Starting final navigation test...");
+
+        const mainAppUrl = "http://localhost:5173/";
+        const newWindow = window.open(
+          mainAppUrl,
+          "_blank",
+          "width=1200,height=900"
+        );
+
+        if (newWindow) {
+          console.log("Main app opened successfully");
+
+          // Show success message
+          const button = document.querySelector(".big-button");
+          const originalText = button.textContent;
+          button.textContent = "✅ 主应用已打开 - 请在新标签页测试";
+          button.style.background = "linear-gradient(135deg, #10b981, #059669)";
+
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background =
+              "linear-gradient(135deg, #ef4444, #dc2626)";
+          }, 3000);
+        } else {
+          alert(
+            "无法打开新标签页！\n\n可能被浏览器阻止。请手动访问:\nhttp://localhost:5173/\n\n然后按照测试步骤进行。"
+          );
+        }
+      }
+
+      // Initialize
+      window.addEventListener("load", () => {
+        console.log("Final navigation test page loaded");
+        console.log("Event-driven router fix applied");
+
+        // Check server status
+        checkServerStatus();
+
+        // Recheck every 5 seconds
+        setInterval(checkServerStatus, 5000);
+      });
+    </script>
+  </body>
+</html>

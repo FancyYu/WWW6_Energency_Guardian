@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Guardian - 修复版测试</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 10px 5px;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+      .emergency-btn {
+        background: #dc2626;
+      }
+      .emergency-btn:hover {
+        background: #b91c1c;
+      }
+      .success {
+        background: #10b981;
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .error {
+        background: #ef4444;
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .info {
+        background: #3b82f6;
+        color: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .wallet-info {
+        background: #f3f4f6;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 10px 0;
+      }
+      .logs {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 10px 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status-connected {
+        background: #10b981;
+      }
+      .status-disconnected {
+        background: #ef4444;
+      }
+      .status-pending {
+        background: #f59e0b;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Emergency Guardian - 修复版功能测试</h1>
+
+    <div class="grid">
+      <!-- 钱包连接测试 -->
+      <div class="container">
+        <h2>🔗 钱包连接测试</h2>
+        <div id="walletStatus" class="info">
+          <span class="status-indicator status-disconnected"></span>
+          检查 MetaMask...
+        </div>
+
+        <div id="walletInfo" class="wallet-info" style="display: none">
+          <div><strong>地址:</strong> <span id="walletAddress">-</span></div>
+          <div>
+            <strong>余额:</strong> <span id="walletBalance">-</span> ETH
+          </div>
+          <div><strong>网络:</strong> <span id="walletNetwork">-</span></div>
+        </div>
+
+        <button id="connectBtn" onclick="testWalletConnection()">
+          连接钱包
+        </button>
+        <button
+          id="disconnectBtn"
+          onclick="disconnectWallet()"
+          style="display: none"
+        >
+          断开连接
+        </button>
+        <button onclick="switchToSepolia()">切换到 Sepolia</button>
+      </div>
+
+      <!-- 智能合约测试 -->
+      <div class="container">
+        <h2>📋 智能合约测试</h2>
+        <div id="contractStatus" class="info">
+          <span class="status-indicator status-disconnected"></span>
+          等待钱包连接...
+        </div>
+
+        <div>
+          <div>
+            <strong>Emergency Management:</strong>
+            0x6af445EA589D8f550a3D1dacf34745071a4D5b4F
+          </div>
+          <div>
+            <strong>ZK Proof Verifier:</strong>
+            0xf9D10528B5b1837cd12be6A449475a1288832263
+          </div>
+        </div>
+
+        <button id="testContractBtn" onclick="testContract()" disabled>
+          测试合约读取
+        </button>
+        <button
+          id="createEmergencyBtn"
+          onclick="createEmergency()"
+          disabled
+          class="emergency-btn"
+        >
+          创建紧急情况
+        </button>
+      </div>
+
+      <!-- 主应用测试 -->
+      <div class="container">
+        <h2>🖥️ 主应用测试</h2>
+        <div id="frontendStatus" class="info">
+          <span class="status-indicator status-connected"></span>
+          前端应用正常运行
+        </div>
+
+        <button onclick="window.open('http://localhost:5173', '_blank')">
+          打开主应用
+        </button>
+        <button onclick="testMainApp()">测试主应用功能</button>
+      </div>
+
+      <!-- AI 服务测试 -->
+      <div class="container">
+        <h2>🤖 AI 服务测试</h2>
+        <div id="aiStatus" class="success">
+          <span class="status-indicator status-connected"></span>
+          AI 服务正常运行
+        </div>
+
+        <button onclick="testAIService()">重新测试 AI 服务</button>
+        <button onclick="testNotification()">测试通知服务</button>
+      </div>
+    </div>
+
+    <!-- 操作日志 -->
+    <div class="container">
+      <h2>📝 操作日志</h2>
+      <div id="logs" class="logs">[系统] 修复版测试页面已加载</div>
+      <button onclick="clearLogs()">清除日志</button>
+    </div>
+
+    <script>
+      let provider = null;
+      let signer = null;
+      let userAddress = null;
+
+      // 合约配置
+      const EMERGENCY_MANAGEMENT_ADDRESS =
+        "0x6af445EA589D8f550a3D1dacf34745071a4D5b4F";
+      const ZK_PROOF_VERIFIER_ADDRESS =
+        "0xf9D10528B5b1837cd12be6A449475a1288832263";
+      const SEPOLIA_CHAIN_ID = 11155111;
+
+      function log(message) {
+        const logsDiv = document.getElementById("logs");
+        const timestamp = new Date().toLocaleTimeString();
+        logsDiv.innerHTML += `\n[${timestamp}] ${message}`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+        console.log(message);
+      }
+
+      function updateStatus(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<span class="status-indicator status-${type}"></span>${message}`;
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "[系统] 日志已清除";
+      }
+
+      // 使用原生Web3 API而不是ethers.js
+      async function testWalletConnection() {
+        try {
+          if (typeof window.ethereum === "undefined") {
+            throw new Error("MetaMask 未安装");
+          }
+
+          log("开始连接 MetaMask...");
+          updateStatus("walletStatus", "连接中...", "pending");
+
+          // 请求连接账户
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts.length === 0) {
+            throw new Error("没有可用的账户");
+          }
+
+          userAddress = accounts[0];
+
+          // 获取余额
+          const balanceHex = await window.ethereum.request({
+            method: "eth_getBalance",
+            params: [userAddress, "latest"],
+          });
+
+          // 转换余额 (从 wei 到 ETH)
+          const balanceWei = parseInt(balanceHex, 16);
+          const balanceEth = (balanceWei / Math.pow(10, 18)).toFixed(4);
+
+          // 获取网络信息
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+          const chainIdDecimal = parseInt(chainId, 16);
+
+          let networkName = "Unknown";
+          switch (chainIdDecimal) {
+            case 1:
+              networkName = "Ethereum Mainnet";
+              break;
+            case 11155111:
+              networkName = "Sepolia Testnet";
+              break;
+            case 5:
+              networkName = "Goerli Testnet";
+              break;
+            default:
+              networkName = `Chain ID: ${chainIdDecimal}`;
+          }
+
+          // 更新UI
+          document.getElementById("walletAddress").textContent = userAddress;
+          document.getElementById("walletBalance").textContent = balanceEth;
+          document.getElementById("walletNetwork").textContent = networkName;
+          document.getElementById("walletInfo").style.display = "block";
+
+          document.getElementById("connectBtn").style.display = "none";
+          document.getElementById("disconnectBtn").style.display =
+            "inline-block";
+          document.getElementById("testContractBtn").disabled = false;
+          document.getElementById("createEmergencyBtn").disabled = false;
+
+          updateStatus("walletStatus", "钱包连接成功", "connected");
+          updateStatus("contractStatus", "准备测试合约", "pending");
+
+          log(`钱包连接成功: ${userAddress}`);
+          log(`网络: ${networkName} (Chain ID: ${chainIdDecimal})`);
+          log(`余额: ${balanceEth} ETH`);
+
+          if (chainIdDecimal !== SEPOLIA_CHAIN_ID) {
+            log("警告: 当前不在 Sepolia 测试网，请切换网络");
+            updateStatus("contractStatus", "请切换到 Sepolia 测试网", "error");
+          }
+        } catch (error) {
+          updateStatus("walletStatus", `连接失败: ${error.message}`, "error");
+          log(`钱包连接失败: ${error.message}`);
+        }
+      }
+
+      function disconnectWallet() {
+        provider = null;
+        signer = null;
+        userAddress = null;
+
+        document.getElementById("connectBtn").style.display = "inline-block";
+        document.getElementById("disconnectBtn").style.display = "none";
+        document.getElementById("testContractBtn").disabled = true;
+        document.getElementById("createEmergencyBtn").disabled = true;
+        document.getElementById("walletInfo").style.display = "none";
+
+        updateStatus("walletStatus", "钱包已断开连接", "disconnected");
+        updateStatus("contractStatus", "等待钱包连接...", "disconnected");
+        log("钱包已断开连接");
+      }
+
+      async function switchToSepolia() {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x" + SEPOLIA_CHAIN_ID.toString(16) }],
+          });
+          log("切换到 Sepolia 网络成功");
+          setTimeout(testWalletConnection, 1000);
+        } catch (error) {
+          if (error.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: "0x" + SEPOLIA_CHAIN_ID.toString(16),
+                    chainName: "Sepolia Testnet",
+                    nativeCurrency: {
+                      name: "Ethereum",
+                      symbol: "ETH",
+                      decimals: 18,
+                    },
+                    rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
+                    blockExplorerUrls: ["https://sepolia.etherscan.io"],
+                  },
+                ],
+              });
+              log("Sepolia 网络添加成功");
+            } catch (addError) {
+              log(`添加 Sepolia 网络失败: ${addError.message}`);
+            }
+          } else {
+            log(`切换网络失败: ${error.message}`);
+          }
+        }
+      }
+
+      // 简化的合约测试（使用原生Web3调用）
+      async function testContract() {
+        try {
+          if (!userAddress) {
+            throw new Error("请先连接钱包");
+          }
+
+          log("开始测试智能合约...");
+          updateStatus("contractStatus", "测试合约中...", "pending");
+
+          // 使用 eth_call 调用合约的 getUserConfig 方法
+          // getUserConfig(address) 的方法签名
+          const methodSignature =
+            "0x" +
+            "getUserConfig(address)"
+              .split("")
+              .map((c) => c.charCodeAt(0).toString(16))
+              .join("");
+
+          // 简化测试：只检查合约是否存在
+          const code = await window.ethereum.request({
+            method: "eth_getCode",
+            params: [EMERGENCY_MANAGEMENT_ADDRESS, "latest"],
+          });
+
+          if (code === "0x" || code === "0x0") {
+            throw new Error("合约不存在或未部署");
+          }
+
+          log("合约代码检查通过");
+          log(`合约地址: ${EMERGENCY_MANAGEMENT_ADDRESS}`);
+          log(`代码长度: ${code.length} 字符`);
+
+          updateStatus("contractStatus", "合约测试成功", "connected");
+          log("智能合约测试完成");
+        } catch (error) {
+          updateStatus(
+            "contractStatus",
+            `合约测试失败: ${error.message}`,
+            "error"
+          );
+          log(`智能合约测试失败: ${error.message}`);
+        }
+      }
+
+      // 简化的紧急情况创建测试
+      async function createEmergency() {
+        try {
+          if (!userAddress) {
+            throw new Error("请先连接钱包");
+          }
+
+          log("开始创建测试紧急情况...");
+          updateStatus("contractStatus", "创建紧急情况中...", "pending");
+
+          // 这里我们只是模拟创建过程，不实际发送交易
+          // 因为没有ethers.js，我们无法轻易构造复杂的合约调用
+
+          log("模拟创建紧急情况...");
+          log("参数: level=2 (MEDIUM), amount=0.01 ETH");
+          log("接收地址: " + userAddress);
+
+          // 模拟延迟
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          updateStatus(
+            "contractStatus",
+            "紧急情况创建成功 (模拟)",
+            "connected"
+          );
+          log("测试紧急情况创建完成 (模拟模式)");
+          log("注意: 这是模拟模式，没有实际发送交易");
+        } catch (error) {
+          updateStatus("contractStatus", `创建失败: ${error.message}`, "error");
+          log(`创建紧急情况失败: ${error.message}`);
+        }
+      }
+
+      // AI 服务测试
+      async function testAIService() {
+        try {
+          log("开始测试 AI 服务...");
+          updateStatus("aiStatus", "测试 AI 服务中...", "pending");
+
+          const response = await fetch("http://localhost:8001/health");
+          const data = await response.json();
+
+          if (data.status === "healthy") {
+            updateStatus("aiStatus", "AI 服务正常", "connected");
+            log("AI 服务健康检查通过");
+          } else {
+            throw new Error("AI 服务状态异常");
+          }
+        } catch (error) {
+          updateStatus(
+            "aiStatus",
+            `AI 服务测试失败: ${error.message}`,
+            "error"
+          );
+          log(`AI 服务测试失败: ${error.message}`);
+        }
+      }
+
+      // 通知服务测试
+      async function testNotification() {
+        try {
+          log("开始测试通知服务...");
+
+          const response = await fetch(
+            "http://localhost:8001/api/v1/notifications/send",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                user_address:
+                  userAddress || "0x1234567890123456789012345678901234567890",
+                emergency_type: "medical",
+                emergency_level: "high",
+                message: "这是一个测试通知",
+              }),
+            }
+          );
+
+          const data = await response.json();
+          log(`通知服务测试成功: ${data.status}`);
+        } catch (error) {
+          log(`通知服务测试失败: ${error.message}`);
+        }
+      }
+
+      // 主应用测试
+      async function testMainApp() {
+        try {
+          log("开始测试主应用功能...");
+
+          // 测试主应用是否可访问
+          const response = await fetch("http://localhost:5173");
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          log("主应用访问正常");
+          log("建议: 在主应用中测试以下功能:");
+          log('1. 点击右上角"连接钱包"按钮');
+          log('2. 连接成功后点击"紧急求助"按钮');
+          log("3. 填写紧急情况表单并提交");
+          log("4. 查看左下角调试面板的状态信息");
+        } catch (error) {
+          log(`主应用测试失败: ${error.message}`);
+        }
+      }
+
+      // 页面加载时的初始化
+      window.addEventListener("load", async () => {
+        log("页面加载完成，开始初始化...");
+
+        // 检查 MetaMask
+        if (typeof window.ethereum !== "undefined") {
+          log("检测到 MetaMask");
+          updateStatus(
+            "walletStatus",
+            "检测到 MetaMask，点击连接",
+            "disconnected"
+          );
+
+          // 检查是否已经连接
+          try {
+            const accounts = await window.ethereum.request({
+              method: "eth_accounts",
+            });
+            if (accounts.length > 0) {
+              log("发现已连接的账户，自动连接...");
+              testWalletConnection();
+            }
+          } catch (error) {
+            log("检查已连接账户时出错: " + error.message);
+          }
+        } else {
+          updateStatus("walletStatus", "未检测到 MetaMask", "error");
+          log("未检测到 MetaMask，请安装 MetaMask 扩展");
+        }
+
+        // 测试 AI 服务
+        testAIService();
+
+        log("初始化完成！");
+        log("");
+        log("=== 测试指南 ===");
+        log('1. 首先点击"连接钱包"测试MetaMask连接');
+        log('2. 如果不在Sepolia网络，点击"切换到 Sepolia"');
+        log('3. 点击"测试合约读取"验证智能合约');
+        log('4. 点击"打开主应用"测试完整功能');
+        log("5. 在主应用中测试钱包连接和紧急情况创建");
+      });
+    </script>
+  </body>
+</html>

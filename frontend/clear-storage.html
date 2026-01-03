@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clear Storage - Emergency Guardian</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #1e3a8a;
+        color: white;
+        text-align: center;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(15px);
+      }
+      .button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 10px;
+        transition: all 0.3s;
+      }
+      .button:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+      }
+      .button.success {
+        background: #10b981;
+      }
+      .button.success:hover {
+        background: #059669;
+      }
+      .status {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧹 Clear Storage</h1>
+      <p>清除本地存储以修复日期序列化问题</p>
+
+      <div class="status" id="status">准备清除存储...</div>
+
+      <button class="button" onclick="clearStorage()">清除本地存储</button>
+
+      <button class="button success" onclick="openMainApp()">打开主应用</button>
+
+      <div style="margin-top: 30px; text-align: left">
+        <h3>说明：</h3>
+        <ul>
+          <li>点击"清除本地存储"来删除旧的序列化数据</li>
+          <li>然后点击"打开主应用"重新初始化数据</li>
+          <li>这将修复日期对象的序列化问题</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      function clearStorage() {
+        try {
+          // 清除localStorage
+          localStorage.clear();
+
+          // 清除sessionStorage
+          sessionStorage.clear();
+
+          // 更新状态
+          document.getElementById("status").innerHTML = `
+                    <div style="color: #10b981;">✅ 本地存储已清除</div>
+                    <div>localStorage: 已清空</div>
+                    <div>sessionStorage: 已清空</div>
+                    <div style="margin-top: 10px; color: #fbbf24;">现在可以打开主应用了</div>
+                `;
+
+          console.log("Storage cleared successfully");
+        } catch (error) {
+          document.getElementById("status").innerHTML = `
+                    <div style="color: #ef4444;">❌ 清除失败: ${error.message}</div>
+                `;
+          console.error("Failed to clear storage:", error);
+        }
+      }
+
+      function openMainApp() {
+        const url = "http://localhost:5173/";
+        const newWindow = window.open(url, "_blank", "width=1400,height=900");
+
+        if (newWindow) {
+          document.getElementById("status").innerHTML = `
+                    <div style="color: #10b981;">✅ 主应用已打开</div>
+                    <div>请在新标签页中查看修复结果</div>
+                `;
+        } else {
+          alert("无法打开新标签页。请手动访问: http://localhost:5173/");
+        }
+      }
+
+      // 显示当前存储状态
+      window.addEventListener("load", () => {
+        const storageKeys = Object.keys(localStorage);
+        document.getElementById("status").innerHTML = `
+                <div>当前localStorage项目: ${storageKeys.length}</div>
+                <div style="font-size: 12px; margin-top: 5px;">
+                    ${storageKeys.length > 0 ? storageKeys.join(", ") : "无"}
+                </div>
+            `;
+      });
+    </script>
+  </body>
+</html>

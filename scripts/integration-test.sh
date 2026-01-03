@@ -136,6 +136,24 @@ docker rmi test-frontend test-backend test-ai-agents test-storage 2>/dev/null ||
 docker network rm guardian-network-test 2>/dev/null || true
 docker volume rm guardian-test-vol 2>/dev/null || true
 
+# Test 9: E2E Test Suite (Optional)
+if [[ "$RUN_E2E_TESTS" == "true" ]]; then
+    echo ""
+    echo "🎭 Test 9: End-to-End Test Suite"
+    if [ -x "e2e-tests/run-tests.sh" ]; then
+        echo "Running E2E tests..."
+        if SKIP_SYSTEM_START=true e2e-tests/run-tests.sh --skip-e2e; then
+            echo -e "${GREEN}✅ E2E tests passed${NC}"
+            ((TESTS_PASSED++))
+        else
+            echo -e "${RED}❌ E2E tests failed${NC}"
+            ((TESTS_FAILED++))
+        fi
+    else
+        echo -e "${YELLOW}⚠️  E2E test runner not found${NC}"
+    fi
+fi
+
 # Test Results
 echo ""
 echo "📊 Integration Test Results"
@@ -151,6 +169,9 @@ if [ $TESTS_FAILED -eq 0 ]; then
     echo "✅ System is ready for deployment"
     echo "🚀 Run './scripts/start-system.sh dev' to start development environment"
     echo "🏭 Run './scripts/start-system.sh prod' to start production environment"
+    echo ""
+    echo "🎭 To run E2E tests: RUN_E2E_TESTS=true ./scripts/integration-test.sh"
+    echo "📋 To run full E2E suite: ./e2e-tests/run-tests.sh"
     exit 0
 else
     echo ""

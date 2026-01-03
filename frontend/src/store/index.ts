@@ -202,7 +202,60 @@ export const useAppStore = create<AppState>()(
           currentRole: state.currentRole,
           wallet: state.wallet,
           sidebarOpen: state.sidebarOpen,
+          // 添加数据持久化
+          guardians: state.guardians,
+          emergencies: state.emergencies,
+          notifications: state.notifications,
+          activities: state.activities,
         }),
+        // 添加反序列化函数来处理日期字段
+        onRehydrateStorage: () => (state) => {
+          if (state) {
+            // 转换紧急情况中的日期字段
+            if (state.emergencies) {
+              state.emergencies = state.emergencies.map((emergency) => ({
+                ...emergency,
+                createdAt: new Date(emergency.createdAt),
+                updatedAt: new Date(emergency.updatedAt),
+                expiresAt: emergency.expiresAt
+                  ? new Date(emergency.expiresAt)
+                  : undefined,
+                approvals: emergency.approvals.map((approval) => ({
+                  ...approval,
+                  timestamp: approval.timestamp
+                    ? new Date(approval.timestamp)
+                    : undefined,
+                })),
+              }));
+            }
+
+            // 转换监护人中的日期字段
+            if (state.guardians) {
+              state.guardians = state.guardians.map((guardian) => ({
+                ...guardian,
+                lastSeen: guardian.lastSeen
+                  ? new Date(guardian.lastSeen)
+                  : undefined,
+              }));
+            }
+
+            // 转换通知中的日期字段
+            if (state.notifications) {
+              state.notifications = state.notifications.map((notification) => ({
+                ...notification,
+                createdAt: new Date(notification.createdAt),
+              }));
+            }
+
+            // 转换活动中的日期字段
+            if (state.activities) {
+              state.activities = state.activities.map((activity) => ({
+                ...activity,
+                timestamp: new Date(activity.timestamp),
+              }));
+            }
+          }
+        },
       }
     ),
     {

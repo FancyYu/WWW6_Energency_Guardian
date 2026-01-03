@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Navigation - Emergency Guardian</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #1e3a8a;
+        color: white;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+      .button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+      }
+      .button:hover {
+        background: #dc2626;
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .success {
+        color: #10b981;
+      }
+      .error {
+        color: #ef4444;
+      }
+      .info {
+        color: #3b82f6;
+      }
+      .warning {
+        color: #f59e0b;
+      }
+      iframe {
+        width: 100%;
+        height: 600px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Debug Navigation Issue</h1>
+
+      <div>
+        <h3>Quick Tests</h3>
+        <button class="button" onclick="testMainApp()">测试主应用</button>
+        <button class="button" onclick="testEmergencyDirect()">
+          直接测试紧急页面
+        </button>
+        <button class="button" onclick="openInNewTab()">
+          在新标签页打开主应用
+        </button>
+        <button class="button" onclick="clearLogs()">清除日志</button>
+      </div>
+
+      <div>
+        <h3>Embedded Test</h3>
+        <iframe id="test-iframe" src="about:blank"></iframe>
+        <button class="button" onclick="loadMainAppInIframe()">
+          在iframe中加载主应用
+        </button>
+      </div>
+
+      <div class="log" id="log"></div>
+    </div>
+
+    <script>
+      let logElement = document.getElementById("log");
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement("div");
+        logEntry.className = type;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        logElement.appendChild(logEntry);
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(`[${type.toUpperCase()}] ${message}`);
+      }
+
+      function clearLogs() {
+        logElement.innerHTML = "";
+      }
+
+      async function testMainApp() {
+        log("测试主应用访问...", "info");
+
+        try {
+          const response = await fetch("http://localhost:5173/");
+          if (response.ok) {
+            log("主应用访问成功", "success");
+            log("请在新标签页中手动测试导航", "info");
+          } else {
+            log(`主应用访问失败: ${response.status}`, "error");
+          }
+        } catch (error) {
+          log(`主应用访问错误: ${error.message}`, "error");
+          log("请确保运行了 npm run dev", "warning");
+        }
+      }
+
+      async function testEmergencyDirect() {
+        log("测试紧急页面直接访问...", "info");
+
+        try {
+          const response = await fetch("http://localhost:5173/emergency");
+          if (response.ok) {
+            log("紧急页面直接访问成功", "success");
+
+            // Open in new tab
+            window.open("http://localhost:5173/emergency", "_blank");
+            log("紧急页面已在新标签页打开", "info");
+          } else {
+            log(`紧急页面访问失败: ${response.status}`, "error");
+          }
+        } catch (error) {
+          log(`紧急页面访问错误: ${error.message}`, "error");
+        }
+      }
+
+      function openInNewTab() {
+        log("在新标签页打开主应用...", "info");
+
+        const newWindow = window.open("http://localhost:5173/", "_blank");
+        if (newWindow) {
+          log("主应用已在新标签页打开", "success");
+          log("请测试以下步骤:", "info");
+          log("1. 等待应用加载完成", "info");
+          log("2. 打开浏览器开发者工具 (F12)", "info");
+          log('3. 点击红色的"紧急求助"按钮', "info");
+          log("4. 查看控制台日志输出", "info");
+          log("5. 检查页面是否切换到紧急页面", "info");
+          log("6. 检查URL是否变为 /emergency", "info");
+        } else {
+          log("无法打开新标签页", "error");
+        }
+      }
+
+      function loadMainAppInIframe() {
+        log("在iframe中加载主应用...", "info");
+
+        const iframe = document.getElementById("test-iframe");
+        iframe.src = "http://localhost:5173/";
+
+        iframe.onload = () => {
+          log("主应用已在iframe中加载", "success");
+          log("注意: iframe中的导航可能受到限制", "warning");
+        };
+
+        iframe.onerror = () => {
+          log("iframe加载失败", "error");
+        };
+      }
+
+      // Initialize
+      window.addEventListener("load", () => {
+        log("Debug Navigation 页面已加载", "info");
+        log("已应用新的导航修复:", "info");
+        log("- 全局状态管理路由", "success");
+        log("- 移除React状态依赖", "success");
+        log("- 强制组件重新渲染", "success");
+
+        // Auto test
+        setTimeout(testMainApp, 1000);
+      });
+    </script>
+  </body>
+</html>

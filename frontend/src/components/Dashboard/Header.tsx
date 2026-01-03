@@ -5,13 +5,10 @@
 
 import React from "react";
 import { GlassNavigation, GlassButton } from "../Glass";
-import {
-  useAppStore,
-  useWallet,
-  useNotifications,
-  useCurrentRole,
-} from "../../store";
-import { useRouter } from "../../hooks/useRouter";
+import { useAppStore, useNotifications, useCurrentRole } from "../../store";
+import { useRouter } from "../../context/RouterContext";
+import { useWeb3 } from "../../hooks/useWeb3";
+import { WalletType } from "../../services/web3";
 
 const MenuIcon = () => (
   <svg
@@ -78,11 +75,18 @@ const SwitchIcon = () => (
 );
 
 export const Header: React.FC = () => {
-  const { setSidebarOpen, switchRole } = useAppStore();
-  const wallet = useWallet();
+  const { setSidebarOpen, switchRole, setWallet } = useAppStore();
   const notifications = useNotifications();
   const currentRole = useCurrentRole();
   const { navigate } = useRouter();
+  const {
+    isConnected,
+    isConnecting,
+    walletInfo,
+    error,
+    connectWallet,
+    disconnect,
+  } = useWeb3();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -95,14 +99,38 @@ export const Header: React.FC = () => {
     return num.toFixed(4);
   };
 
-  const handleConnectWallet = () => {
-    // 临时的模拟连接
-    console.log("Connect wallet clicked");
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet(WalletType.METAMASK);
+      // 更新store中的钱包状态
+      if (walletInfo) {
+        setWallet({
+          isConnected: true,
+          address: walletInfo.address,
+          balance: walletInfo.balance,
+          chainId: walletInfo.chainId,
+          networkName: walletInfo.networkName,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+    }
   };
 
-  const handleDisconnect = () => {
-    // 临时的模拟断开
-    console.log("Disconnect clicked");
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      // 清除store中的钱包状态
+      setWallet({
+        isConnected: false,
+        address: undefined,
+        balance: undefined,
+        chainId: undefined,
+        networkName: undefined,
+      });
+    } catch (error) {
+      console.error("Failed to disconnect wallet:", error);
+    }
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -164,25 +192,25 @@ export const Header: React.FC = () => {
 
         {/* Wallet connection */}
         <div className="flex items-center space-x-3">
-          {wallet.isConnected ? (
+          {isConnected && walletInfo ? (
             <div className="flex items-center space-x-3">
               {/* Balance */}
               <div className="hidden sm:block text-sm text-gray-200">
                 <div className="font-medium">
-                  {wallet.balance
-                    ? `${formatBalance(wallet.balance)} ETH`
+                  {walletInfo.balance
+                    ? `${formatBalance(walletInfo.balance)} ETH`
                     : "0.0000 ETH"}
                 </div>
                 <div className="text-xs text-gray-400">
-                  {wallet.address ? formatAddress(wallet.address) : ""}
+                  {formatAddress(walletInfo.address)}
                 </div>
               </div>
 
-              {/* Wallet indicator */}
+              {/* Network indicator */}
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-success-400 rounded-full shadow-glow-green"></div>
                 <span className="hidden sm:inline text-sm text-gray-200">
-                  已连接
+                  {walletInfo.networkName}
                 </span>
               </div>
 
@@ -203,9 +231,18 @@ export const Header: React.FC = () => {
               glow
               leftIcon={<WalletIcon />}
               onClick={handleConnectWallet}
+              loading={isConnecting}
+              disabled={isConnecting}
             >
-              连接钱包
+              {isConnecting ? "连接中..." : "连接钱包"}
             </GlassButton>
+          )}
+
+          {/* Show error if any */}
+          {error && (
+            <div className="text-xs text-red-400 max-w-xs truncate">
+              {error}
+            </div>
           )}
         </div>
 

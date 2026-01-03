@@ -1,0 +1,124 @@
+version: "3.8"
+
+networks:
+  guardian-network:
+    driver: bridge
+
+services:
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: guardian-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - guardian-network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # PostgreSQL for backend data
+  postgres:
+    image: postgres:15-alpine
+    container_name: guardian-postgres
+    environment:
+      POSTGRES_DB: emergency_guardian
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_pass_prod_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - guardian-network
+    restart: unless-stopped
+
+  # AI Agents Service
+  ai-agents:
+    build:
+      context: ./ai-agents
+      dockerfile: Dockerfile
+    container_name: guardian-ai-agents
+    ports:
+      - "8001:8001"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://guardian:guardian_pass_prod_2024@postgres:5432/emergency_guardian
+      - BLOCKCHAIN_RPC_URL=https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
+      - GEMINI_API_KEY=AIzaSyDummy_Key_For_Demo
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - guardian-network
+    restart: unless-stopped
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: guardian-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://guardian:guardian_pass_prod_2024@postgres:5432/emergency_guardian
+      - REDIS_URL=redis://redis:6379
+      - AI_AGENTS_URL=http://ai-agents:8001
+      - JWT_SECRET=emergency_guardian_jwt_secret_2024_production_key_32_chars
+      - BLOCKCHAIN_RPC_URL=https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
+      - CONTRACT_ADDRESS=0x6af445EA589D8f550a3D1dacf34745071a4D5b4F
+      - PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    depends_on:
+      - postgres
+      - redis
+      - ai-agents
+    networks:
+      - guardian-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: guardian-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3001
+      - VITE_AI_AGENTS_URL=http://localhost:8001
+      - VITE_BLOCKCHAIN_RPC_URL=https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
+      - VITE_CONTRACT_ADDRESS=0x6af445EA589D8f550a3D1dacf34745071a4D5b4F
+      - VITE_CHAIN_ID=11155111
+      - VITE_NETWORK_NAME=sepolia
+    depends_on:
+      - backend
+    networks:
+      - guardian-network
+    restart: unless-stopped
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: guardian-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+      - ai-agents
+    networks:
+      - guardian-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:

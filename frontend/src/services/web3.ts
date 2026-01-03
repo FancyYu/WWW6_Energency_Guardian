@@ -24,7 +24,7 @@ export const SUPPORTED_NETWORKS = {
   sepolia: {
     chainId: 11155111,
     name: "Sepolia Testnet",
-    rpcUrl: "https://eth-sepolia.g.alchemy.com/v2/demo",
+    rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
     blockExplorer: "https://sepolia.etherscan.io",
     nativeCurrency: {
       name: "Ethereum",

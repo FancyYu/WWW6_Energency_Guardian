@@ -15,8 +15,8 @@ export const CONTRACT_ADDRESSES = {
     zkProofVerifier: "0x0000000000000000000000000000000000000000", // 待部署
   },
   sepolia: {
-    emergencyManagement: "0x0000000000000000000000000000000000000000", // 测试合约地址
-    zkProofVerifier: "0x0000000000000000000000000000000000000000", // 测试合约地址
+    emergencyManagement: "0x6af445EA589D8f550a3D1dacf34745071a4D5b4F", // 已部署的Emergency Management合约
+    zkProofVerifier: "0xf9D10528B5b1837cd12be6A449475a1288832263", // 已部署的ZK Proof Verifier合约
   },
   goerli: {
     emergencyManagement: "0x0000000000000000000000000000000000000000", // 测试合约地址

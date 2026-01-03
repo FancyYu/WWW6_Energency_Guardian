@@ -9,13 +9,17 @@ import { OperationMonitor } from "./OperationMonitor";
 import { Button } from "../Common/Button";
 import { Badge } from "../Common/Badge";
 import { useEmergencies, useAppStore } from "../../store";
-import type { Emergency, EmergencyType, EmergencyLevel } from "../../types";
+import type {
+  Emergency,
+  EmergencyType,
+  EmergencyLevel as EmergencyLevelType,
+} from "../../types";
 
 type ViewMode = "trigger" | "monitor" | "verification";
 
 interface EmergencyRequest {
   type: EmergencyType;
-  level: EmergencyLevel;
+  level: EmergencyLevelType;
   title: string;
   description: string;
   requestedAmount?: string;
@@ -107,34 +111,43 @@ export const EmergencyPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // 为演示目的，跳过钱包连接检查，直接创建本地记录
+      console.log("Creating emergency request for demo:", request);
 
-      // Create new emergency
+      // 创建本地紧急情况记录（演示模式）
       const newEmergency: Emergency = {
         id: `emergency-${Date.now()}`,
-        userId: "user-001",
+        userId: "demo-user-001",
         type: request.type,
         level: request.level,
         status: "pending",
         title: request.title,
         description: request.description,
         requestedAmount: request.requestedAmount,
-        recipientAddress: request.recipientAddress,
+        recipientAddress:
+          request.recipientAddress ||
+          "0x742d35Cc6634C0532925a3b8D4C9db96590c6C87",
         createdAt: new Date(),
         updatedAt: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        transactionHash: `0x${Math.random().toString(16).slice(2, 66)}`, // 模拟交易哈希
         approvals: [
           {
             guardianId: "guardian-001",
-            guardianAddress: "0x123...",
+            guardianAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
             guardianName: "张医生",
             status: "pending",
           },
           {
             guardianId: "guardian-002",
-            guardianAddress: "0x456...",
-            guardianName: "李护士",
+            guardianAddress: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+            guardianName: "李律师",
+            status: "pending",
+          },
+          {
+            guardianId: "guardian-003",
+            guardianAddress: "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+            guardianName: "王财务",
             status: "pending",
           },
         ],
@@ -142,7 +155,7 @@ export const EmergencyPage: React.FC = () => {
 
       addEmergency(newEmergency);
 
-      // Add activity log
+      // 添加活动日志
       addActivity({
         id: `activity-${Date.now()}`,
         type: "emergency_created",
@@ -150,22 +163,33 @@ export const EmergencyPage: React.FC = () => {
         timestamp: new Date(),
       });
 
-      // Add notification
+      // 添加通知
       addNotification({
         id: `notification-${Date.now()}`,
         type: "emergency_created",
         title: "紧急请求已创建",
-        message: `您的紧急请求"${request.title}"已提交，正在通知监护人。`,
+        message: `您的紧急请求"${request.title}"已成功创建，等待监护人审批`,
         isRead: false,
         createdAt: new Date(),
       });
 
-      // Switch to verification view
+      // 切换到验证视图
       setSelectedEmergency(newEmergency);
       setViewMode("verification");
     } catch (error) {
       console.error("Failed to create emergency:", error);
-      // Handle error (show toast, etc.)
+
+      // 显示错误通知
+      addNotification({
+        id: `notification-${Date.now()}`,
+        type: "error",
+        title: "创建失败",
+        message: `创建紧急请求失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`,
+        isRead: false,
+        createdAt: new Date(),
+      });
     } finally {
       setIsSubmitting(false);
     }

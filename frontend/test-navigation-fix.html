@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Navigation Fix Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+      }
+      .button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+      .button:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+      }
+      .button.success {
+        background: #10b981;
+      }
+      .button.success:hover {
+        background: #059669;
+      }
+      .status {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-family: monospace;
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .success {
+        color: #10b981;
+      }
+      .error {
+        color: #ef4444;
+      }
+      .info {
+        color: #3b82f6;
+      }
+      .warning {
+        color: #f59e0b;
+      }
+      .test-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+      .iframe-container {
+        width: 100%;
+        height: 600px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 20px 0;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚨 Emergency Guardian - Navigation Fix Test</h1>
+
+      <div class="status">
+        <h3>Test Status</h3>
+        <p>Frontend Server: <span id="frontend-status">检测中...</span></p>
+        <p>Navigation Fix: <span id="nav-fix-status">未测试</span></p>
+        <p>Current Time: <span id="current-time">-</span></p>
+      </div>
+
+      <div class="test-section">
+        <h3>🔧 Navigation Fix Applied</h3>
+        <p>已应用以下修复:</p>
+        <ul>
+          <li>✅ 修复了 useRouter hook 中的无限重渲染问题</li>
+          <li>✅ 添加了 renderKey 强制重新渲染机制</li>
+          <li>✅ 优化了 navigate 函数的状态更新顺序</li>
+          <li>✅ 在 App.tsx 中添加了 key prop 强制组件重新渲染</li>
+        </ul>
+      </div>
+
+      <div class="test-section">
+        <h3>🧪 Test Actions</h3>
+        <button class="button" onclick="testFrontendAccess()">
+          测试前端访问
+        </button>
+        <button class="button" onclick="testDirectEmergencyPage()">
+          测试直接访问紧急页面
+        </button>
+        <button class="button success" onclick="openMainApp()">
+          打开主应用测试导航
+        </button>
+        <button class="button" onclick="clearLogs()">清除日志</button>
+      </div>
+
+      <div class="test-section">
+        <h3>📋 Test Instructions</h3>
+        <ol>
+          <li>点击 "打开主应用测试导航" 按钮</li>
+          <li>在新打开的标签页中，点击 "紧急求助" 按钮</li>
+          <li>检查页面是否正确切换到紧急求助页面</li>
+          <li>查看浏览器控制台的日志输出</li>
+          <li>测试其他导航按钮（监护人、设置等）</li>
+        </ol>
+      </div>
+
+      <div class="test-section">
+        <h3>🔍 Expected Behavior</h3>
+        <p><strong>修复前:</strong> 点击按钮后URL会变化，但页面内容不会更新</p>
+        <p><strong>修复后:</strong> 点击按钮后URL变化，页面内容也会正确更新</p>
+      </div>
+
+      <div class="log" id="log"></div>
+
+      <div class="test-section">
+        <h3>📱 Embedded Test (Optional)</h3>
+        <p>如果需要，可以在下方iframe中直接测试:</p>
+        <div class="iframe-container">
+          <iframe id="test-iframe" src="about:blank"></iframe>
+        </div>
+        <button class="button" onclick="loadMainAppInIframe()">
+          在iframe中加载主应用
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let logElement = document.getElementById("log");
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement("div");
+        logEntry.className = type;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        logElement.appendChild(logEntry);
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(`[${type.toUpperCase()}] ${message}`);
+      }
+
+      function clearLogs() {
+        logElement.innerHTML = "";
+        log("日志已清除", "info");
+      }
+
+      function updateTime() {
+        document.getElementById("current-time").textContent =
+          new Date().toLocaleTimeString();
+      }
+
+      async function testFrontendAccess() {
+        log("测试前端服务器访问...", "info");
+
+        try {
+          const response = await fetch("http://localhost:5173/");
+          if (response.ok) {
+            document.getElementById("frontend-status").textContent =
+              "运行中 ✅";
+            document.getElementById("frontend-status").className = "success";
+            log("前端服务器访问成功", "success");
+            return true;
+          } else {
+            document.getElementById(
+              "frontend-status"
+            ).textContent = `错误 ${response.status} ❌`;
+            document.getElementById("frontend-status").className = "error";
+            log(`前端服务器返回错误: ${response.status}`, "error");
+            return false;
+          }
+        } catch (error) {
+          document.getElementById("frontend-status").textContent = "离线 ❌";
+          document.getElementById("frontend-status").className = "error";
+          log(`前端服务器无法访问: ${error.message}`, "error");
+          log('请确保运行了 "npm run dev" 命令', "warning");
+          return false;
+        }
+      }
+
+      async function testDirectEmergencyPage() {
+        log("测试直接访问紧急页面...", "info");
+
+        const isServerRunning = await testFrontendAccess();
+        if (!isServerRunning) {
+          log("前端服务器未运行，跳过测试", "warning");
+          return;
+        }
+
+        try {
+          const emergencyUrl = "http://localhost:5173/emergency";
+          log(`尝试访问: ${emergencyUrl}`, "info");
+
+          const response = await fetch(emergencyUrl);
+          if (response.ok) {
+            log("紧急页面直接访问成功", "success");
+
+            // Open in new tab
+            const newWindow = window.open(emergencyUrl, "_blank");
+            if (newWindow) {
+              log("紧急页面已在新标签页打开", "success");
+            } else {
+              log("无法打开新标签页（可能被浏览器阻止）", "warning");
+            }
+          } else {
+            log(`紧急页面访问失败: ${response.status}`, "error");
+          }
+        } catch (error) {
+          log(`紧急页面测试失败: ${error.message}`, "error");
+        }
+      }
+
+      async function openMainApp() {
+        log("打开主应用进行导航测试...", "info");
+
+        const isServerRunning = await testFrontendAccess();
+        if (!isServerRunning) {
+          log("前端服务器未运行，无法打开主应用", "error");
+          return;
+        }
+
+        try {
+          const mainAppUrl = "http://localhost:5173/";
+          log(`打开主应用: ${mainAppUrl}`, "info");
+
+          const newWindow = window.open(mainAppUrl, "_blank");
+          if (newWindow) {
+            log("主应用已在新标签页打开", "success");
+            log("请在新标签页中测试以下功能:", "info");
+            log('1. 点击 "紧急求助" 按钮', "info");
+            log("2. 检查页面是否切换到紧急求助页面", "info");
+            log("3. 测试其他导航按钮", "info");
+            log("4. 查看浏览器控制台的日志输出", "info");
+
+            document.getElementById("nav-fix-status").textContent =
+              "测试中... 请检查新标签页";
+            document.getElementById("nav-fix-status").className = "warning";
+          } else {
+            log("无法打开新标签页（可能被浏览器阻止）", "error");
+            log("请手动访问: http://localhost:5173/", "info");
+          }
+        } catch (error) {
+          log(`打开主应用失败: ${error.message}`, "error");
+        }
+      }
+
+      function loadMainAppInIframe() {
+        log("在iframe中加载主应用...", "info");
+
+        const iframe = document.getElementById("test-iframe");
+        iframe.src = "http://localhost:5173/";
+
+        iframe.onload = () => {
+          log("主应用已在iframe中加载", "success");
+          log("注意: iframe中的导航可能受到限制", "warning");
+        };
+
+        iframe.onerror = () => {
+          log("iframe加载失败", "error");
+        };
+      }
+
+      // Initialize
+      window.addEventListener("load", () => {
+        log("Navigation Fix Test 页面已加载", "info");
+        log("开始检测前端服务器状态...", "info");
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Auto-test frontend access
+        setTimeout(testFrontendAccess, 1000);
+      });
+    </script>
+  </body>
+</html>

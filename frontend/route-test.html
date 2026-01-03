@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>路由功能测试</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 10px 5px;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      .emergency-btn {
+        background: #dc2626;
+      }
+      .emergency-btn:hover {
+        background: #b91c1c;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .info {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .logs {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Emergency Guardian - 路由功能测试</h1>
+
+    <div class="container">
+      <h2>🎯 测试说明</h2>
+      <p>这个页面将帮助您测试主应用的路由功能。请按照以下步骤操作：</p>
+      <ol>
+        <li>打开浏览器开发者工具（F12）</li>
+        <li>切换到Console标签页</li>
+        <li>点击下方的"打开主应用"按钮</li>
+        <li>在主应用中点击"紧急求助"按钮</li>
+        <li>观察Console中的日志输出</li>
+      </ol>
+    </div>
+
+    <div class="container">
+      <h2>🔧 测试工具</h2>
+      <div id="status" class="status info">准备开始测试...</div>
+
+      <button onclick="openMainApp()">打开主应用</button>
+      <button onclick="openEmergencyPage()" class="emergency-btn">
+        直接打开紧急页面
+      </button>
+      <button onclick="testAllRoutes()">测试所有路由</button>
+      <button onclick="checkConsoleInstructions()">查看Console指导</button>
+    </div>
+
+    <div class="container">
+      <h2>📋 预期行为</h2>
+      <div class="info">
+        <strong>当您点击"紧急求助"按钮时，应该看到：</strong>
+        <ul>
+          <li>Console中显示: "Emergency button clicked!"</li>
+          <li>Console中显示: "Navigating to: emergency"</li>
+          <li>Console中显示: "Rendering content for route: emergency"</li>
+          <li>Console中显示: "Rendering EmergencyPage"</li>
+          <li>页面内容从Dashboard切换到Emergency页面</li>
+          <li>URL地址栏变为: http://localhost:5173/emergency</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>🐛 故障排除</h2>
+      <div class="error">
+        <strong>如果按钮没有反应，可能的原因：</strong>
+        <ul>
+          <li>JavaScript错误阻止了事件处理</li>
+          <li>React组件没有正确渲染</li>
+          <li>路由hook没有正确初始化</li>
+          <li>事件处理器没有正确绑定</li>
+        </ul>
+      </div>
+
+      <div class="info">
+        <strong>检查步骤：</strong>
+        <ul>
+          <li>查看Console是否有JavaScript错误</li>
+          <li>确认是否看到路由相关的日志</li>
+          <li>检查Network标签页是否有加载失败的资源</li>
+          <li>尝试刷新页面重新加载</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>📝 测试日志</h2>
+      <div id="logs" class="logs">测试工具已加载，请开始测试...</div>
+      <button onclick="clearLogs()">清除日志</button>
+    </div>
+
+    <script>
+      function log(message, type = "info") {
+        const logsDiv = document.getElementById("logs");
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix =
+          type === "error"
+            ? "❌"
+            : type === "success"
+            ? "✅"
+            : type === "warning"
+            ? "⚠️"
+            : "ℹ️";
+        logsDiv.innerHTML += `\n[${timestamp}] ${prefix} ${message}`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+        console.log(message);
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "日志已清除";
+      }
+
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("status");
+        statusDiv.innerHTML = message;
+        statusDiv.className = `status ${type}`;
+      }
+
+      function openMainApp() {
+        log("打开主应用...", "info");
+        updateStatus("主应用已在新窗口打开，请在新窗口中测试功能", "success");
+
+        const newWindow = window.open("http://localhost:5173", "_blank");
+
+        if (newWindow) {
+          log("主应用已在新窗口打开", "success");
+          log("请在新窗口中：", "info");
+          log("1. 打开开发者工具（F12）", "info");
+          log("2. 切换到Console标签页", "info");
+          log('3. 点击"紧急求助"按钮', "info");
+          log("4. 观察Console中的日志输出", "info");
+        } else {
+          log("无法打开新窗口，可能被浏览器阻止", "error");
+          updateStatus(
+            "无法打开新窗口，请手动访问 http://localhost:5173",
+            "error"
+          );
+        }
+      }
+
+      function openEmergencyPage() {
+        log("直接打开紧急页面...", "info");
+        const newWindow = window.open(
+          "http://localhost:5173/emergency",
+          "_blank"
+        );
+
+        if (newWindow) {
+          log("紧急页面已在新窗口打开", "success");
+          updateStatus("紧急页面已打开，检查是否显示紧急情况表单", "success");
+        } else {
+          log("无法打开新窗口", "error");
+        }
+      }
+
+      async function testAllRoutes() {
+        log("开始测试所有路由...", "info");
+        updateStatus("测试所有路由中...", "info");
+
+        const routes = [
+          "dashboard",
+          "emergency",
+          "guardians",
+          "settings",
+          "activities",
+        ];
+
+        for (const route of routes) {
+          try {
+            log(`测试路由: /${route}`, "info");
+            const response = await fetch(`http://localhost:5173/${route}`);
+
+            if (response.ok) {
+              log(`✅ 路由 /${route} 可访问`, "success");
+            } else {
+              log(`❌ 路由 /${route} 返回 ${response.status}`, "error");
+            }
+          } catch (error) {
+            log(`❌ 路由 /${route} 测试失败: ${error.message}`, "error");
+          }
+
+          // 短暂延迟
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        updateStatus("路由测试完成，查看日志了解详情", "success");
+        log("所有路由测试完成", "success");
+      }
+
+      function checkConsoleInstructions() {
+        log("=== Console调试指导 ===", "info");
+        log("1. 打开主应用: http://localhost:5173", "info");
+        log("2. 按F12打开开发者工具", "info");
+        log("3. 切换到Console标签页", "info");
+        log('4. 点击"紧急求助"按钮', "info");
+        log("5. 查看是否出现以下日志:", "info");
+        log('   - "Emergency button clicked!"', "info");
+        log('   - "Navigating to: emergency"', "info");
+        log('   - "Rendering content for route: emergency"', "info");
+        log('   - "Rendering EmergencyPage"', "info");
+        log("6. 如果没有看到这些日志，说明存在问题", "warning");
+        log("7. 如果看到错误信息，请记录下来", "warning");
+
+        updateStatus("Console调试指导已显示在日志中", "info");
+      }
+
+      // 页面加载时的初始化
+      window.addEventListener("load", () => {
+        log("路由测试工具已加载", "info");
+        log('请点击"打开主应用"开始测试', "info");
+
+        // 检查主应用是否可访问
+        fetch("http://localhost:5173")
+          .then((response) => {
+            if (response.ok) {
+              log("主应用服务正常运行", "success");
+              updateStatus("主应用服务正常，可以开始测试", "success");
+            } else {
+              log(`主应用返回错误: ${response.status}`, "error");
+              updateStatus(`主应用访问异常: HTTP ${response.status}`, "error");
+            }
+          })
+          .catch((error) => {
+            log(`无法连接到主应用: ${error.message}`, "error");
+            updateStatus("无法连接到主应用，请确认服务正在运行", "error");
+          });
+      });
+    </script>
+  </body>
+</html>

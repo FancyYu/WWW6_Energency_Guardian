@@ -90,6 +90,7 @@ export interface Emergency {
   expiresAt?: Date;
   approvals: GuardianApproval[];
   executionTx?: string;
+  transactionHash?: string;
 }
 
 // 监护人批准
@@ -108,6 +109,7 @@ export interface WalletState {
   isConnected: boolean;
   address?: string;
   chainId?: number;
+  networkName?: string;
   balance?: string;
   walletType?: string;
 }
@@ -120,6 +122,7 @@ export const NotificationType = {
   GUARDIAN_ADDED: "guardian_added",
   GUARDIAN_REMOVED: "guardian_removed",
   SYSTEM_UPDATE: "system_update",
+  ERROR: "error",
 } as const;
 
 export type NotificationType =

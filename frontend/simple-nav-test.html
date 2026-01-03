@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Navigation Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #1e3a8a;
+        color: white;
+        text-align: center;
+      }
+      .big-button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 20px 40px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: bold;
+        margin: 20px;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        transition: all 0.3s;
+      }
+      .big-button:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+      }
+      .status {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px auto;
+        max-width: 600px;
+      }
+      .instructions {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px auto;
+        max-width: 800px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚨 Emergency Guardian - Simple Navigation Test</h1>
+
+    <div class="status">
+      <h2>Navigation Fix Applied ✅</h2>
+      <p>已应用全新的路由解决方案，使用全局状态管理</p>
+    </div>
+
+    <button class="big-button" onclick="openMainApp()">
+      🚀 打开主应用测试导航
+    </button>
+
+    <div class="instructions">
+      <h3>📋 测试步骤：</h3>
+      <ol>
+        <li><strong>点击上方按钮</strong> - 这将在新标签页打开主应用</li>
+        <li><strong>等待应用加载</strong> - 应该看到仪表板页面</li>
+        <li><strong>打开开发者工具</strong> - 按F12键</li>
+        <li><strong>点击"紧急求助"按钮</strong> - 红色的大按钮</li>
+        <li>
+          <strong>观察变化</strong>：
+          <ul>
+            <li>URL应该变为 /emergency</li>
+            <li>页面内容应该切换到紧急操作中心</li>
+            <li>控制台应该显示导航日志</li>
+          </ul>
+        </li>
+        <li><strong>测试其他按钮</strong> - 尝试点击其他导航按钮</li>
+      </ol>
+    </div>
+
+    <div class="status">
+      <h3>🔧 Applied Fixes:</h3>
+      <ul style="text-align: left; display: inline-block">
+        <li>✅ 全局路由状态管理</li>
+        <li>✅ 移除React状态依赖问题</li>
+        <li>✅ 强制组件重新渲染机制</li>
+        <li>✅ 简化导航逻辑</li>
+      </ul>
+    </div>
+
+    <script>
+      function openMainApp() {
+        console.log("Opening main app for navigation test...");
+
+        const mainAppUrl = "http://localhost:5173/";
+        const newWindow = window.open(
+          mainAppUrl,
+          "_blank",
+          "width=1200,height=800"
+        );
+
+        if (newWindow) {
+          console.log("Main app opened in new window");
+          alert(
+            '主应用已在新标签页打开！\n\n请按照页面上的测试步骤进行测试。\n\n特别注意：\n1. 点击"紧急求助"按钮\n2. 检查页面是否切换\n3. 查看浏览器控制台日志'
+          );
+        } else {
+          alert(
+            "无法打开新标签页，可能被浏览器阻止。\n\n请手动访问: http://localhost:5173/"
+          );
+        }
+      }
+
+      // Auto-open on load
+      window.addEventListener("load", () => {
+        console.log("Simple navigation test page loaded");
+
+        // Check if server is running
+        fetch("http://localhost:5173/")
+          .then((response) => {
+            if (response.ok) {
+              console.log("Frontend server is running");
+            } else {
+              alert(
+                '前端服务器似乎没有运行。\n\n请确保在 frontend 目录下运行了 "npm run dev" 命令。'
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Frontend server check failed:", error);
+            alert(
+              '无法连接到前端服务器。\n\n请确保：\n1. 在 frontend 目录下运行了 "npm run dev"\n2. 服务器正在 http://localhost:5173 上运行'
+            );
+          });
+      });
+    </script>
+  </body>
+</html>

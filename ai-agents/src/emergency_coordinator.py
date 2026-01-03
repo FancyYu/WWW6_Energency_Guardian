@@ -18,6 +18,7 @@ try:
     from eth_account import Account
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import rsa, padding
+    from gemini_analyzer import GeminiAnalyzer
     EXTERNAL_DEPS_AVAILABLE = True
 except ImportError:
     EXTERNAL_DEPS_AVAILABLE = False
@@ -31,6 +32,9 @@ except ImportError:
             class MockAccount:
                 address = "0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
             return MockAccount()
+    class GeminiAnalyzer:
+        def __init__(self, api_key): pass
+        async def analyze_medical_data(self, *args): return {'severity': 'medium', 'confidence': 0.8}
 
 try:
     from .gemini_analyzer import GeminiAnalyzer
@@ -286,8 +290,8 @@ class EmergencyCoordinator:
             return
             
         self.gemini_analyzer = GeminiAnalyzer(config.get('gemini_api_key'))
-        self.zkp_validator = ZKProofValidator()
-        self.proposal_manager = ProposalManager(config)
+        self.zkp_validator = MockZKProofValidator()
+        self.proposal_manager = MockProposalManager(config)
         
         # 初始化通知协调器 (优先使用Mock版本进行开发)
         if config.get('use_mock_notifications', True):

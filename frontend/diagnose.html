@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Guardian - 诊断工具</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .info {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      .logs {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Emergency Guardian - 系统诊断</h1>
+
+    <div class="container">
+      <h2>🔍 系统状态检查</h2>
+      <div id="systemStatus">检查中...</div>
+      <button onclick="runDiagnostics()">重新检查</button>
+      <button onclick="openMainApp()">打开主应用</button>
+      <button onclick="testWalletConnection()">测试钱包连接</button>
+    </div>
+
+    <div class="container">
+      <h2>📋 检查结果</h2>
+      <div id="results"></div>
+    </div>
+
+    <div class="container">
+      <h2>📝 诊断日志</h2>
+      <div id="logs" class="logs">正在初始化诊断工具...</div>
+      <button onclick="clearLogs()">清除日志</button>
+    </div>
+
+    <script>
+      function log(message, type = "info") {
+        const logsDiv = document.getElementById("logs");
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix =
+          type === "error"
+            ? "❌"
+            : type === "success"
+            ? "✅"
+            : type === "warning"
+            ? "⚠️"
+            : "ℹ️";
+        logsDiv.innerHTML += `\n[${timestamp}] ${prefix} ${message}`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+        console.log(message);
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "日志已清除";
+      }
+
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("systemStatus");
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      function addResult(title, status, details = "") {
+        const resultsDiv = document.getElementById("results");
+        const statusClass =
+          status === "success"
+            ? "success"
+            : status === "error"
+            ? "error"
+            : status === "warning"
+            ? "warning"
+            : "info";
+        const statusIcon =
+          status === "success"
+            ? "✅"
+            : status === "error"
+            ? "❌"
+            : status === "warning"
+            ? "⚠️"
+            : "ℹ️";
+
+        resultsDiv.innerHTML += `
+                <div class="status ${statusClass}">
+                    ${statusIcon} <strong>${title}</strong><br>
+                    ${details}
+                </div>
+            `;
+      }
+
+      async function runDiagnostics() {
+        log("开始系统诊断...", "info");
+        updateStatus("正在运行诊断...", "info");
+        document.getElementById("results").innerHTML = "";
+
+        // 1. 检查前端应用
+        try {
+          const response = await fetch("http://localhost:5173");
+          if (response.ok) {
+            addResult(
+              "前端应用",
+              "success",
+              "主应用正在运行 (http://localhost:5173)"
+            );
+            log("前端应用检查通过", "success");
+          } else {
+            addResult(
+              "前端应用",
+              "error",
+              `HTTP ${response.status} - 应用可能有问题`
+            );
+            log(`前端应用返回错误: ${response.status}`, "error");
+          }
+        } catch (error) {
+          addResult(
+            "前端应用",
+            "error",
+            `无法连接到前端应用: ${error.message}`
+          );
+          log(`前端应用检查失败: ${error.message}`, "error");
+        }
+
+        // 2. 检查AI服务
+        try {
+          const response = await fetch("http://localhost:8001/health");
+          const data = await response.json();
+          if (data.status === "healthy") {
+            addResult("AI代理服务", "success", "AI服务正常运行，所有组件健康");
+            log("AI服务检查通过", "success");
+          } else {
+            addResult("AI代理服务", "warning", `服务状态: ${data.status}`);
+            log(`AI服务状态异常: ${data.status}`, "warning");
+          }
+        } catch (error) {
+          addResult(
+            "AI代理服务",
+            "error",
+            `无法连接到AI服务: ${error.message}`
+          );
+          log(`AI服务检查失败: ${error.message}`, "error");
+        }
+
+        // 3. 检查MetaMask
+        if (typeof window.ethereum !== "undefined") {
+          addResult("MetaMask", "success", "MetaMask已安装并可用");
+          log("MetaMask检查通过", "success");
+
+          // 检查是否已连接
+          try {
+            const accounts = await window.ethereum.request({
+              method: "eth_accounts",
+            });
+            if (accounts.length > 0) {
+              addResult("钱包连接", "success", `已连接账户: ${accounts[0]}`);
+              log(`钱包已连接: ${accounts[0]}`, "success");
+
+              // 检查网络
+              const chainId = await window.ethereum.request({
+                method: "eth_chainId",
+              });
+              const chainIdDecimal = parseInt(chainId, 16);
+              if (chainIdDecimal === 11155111) {
+                addResult("网络设置", "success", "Sepolia测试网 - 正确");
+                log("网络设置正确: Sepolia测试网", "success");
+              } else {
+                addResult(
+                  "网络设置",
+                  "warning",
+                  `当前网络: Chain ID ${chainIdDecimal} (建议切换到Sepolia)`
+                );
+                log(`网络设置: Chain ID ${chainIdDecimal}`, "warning");
+              }
+            } else {
+              addResult("钱包连接", "warning", "钱包未连接，需要手动连接");
+              log("钱包未连接", "warning");
+            }
+          } catch (error) {
+            addResult(
+              "钱包连接",
+              "error",
+              `检查连接状态失败: ${error.message}`
+            );
+            log(`检查钱包连接失败: ${error.message}`, "error");
+          }
+        } else {
+          addResult("MetaMask", "error", "MetaMask未安装，请安装MetaMask扩展");
+          log("MetaMask未安装", "error");
+        }
+
+        // 4. 检查智能合约
+        try {
+          if (typeof window.ethereum !== "undefined") {
+            const contractAddress =
+              "0x6af445EA589D8f550a3D1dacf34745071a4D5b4F";
+            const code = await window.ethereum.request({
+              method: "eth_getCode",
+              params: [contractAddress, "latest"],
+            });
+
+            if (code && code !== "0x" && code !== "0x0") {
+              addResult(
+                "智能合约",
+                "success",
+                `Emergency Management合约已部署 (${contractAddress})`
+              );
+              log("智能合约检查通过", "success");
+            } else {
+              addResult("智能合约", "error", "合约未部署或地址错误");
+              log("智能合约检查失败: 合约不存在", "error");
+            }
+          } else {
+            addResult("智能合约", "warning", "无法检查合约 - MetaMask未安装");
+            log("无法检查智能合约: MetaMask未安装", "warning");
+          }
+        } catch (error) {
+          addResult("智能合约", "error", `检查合约失败: ${error.message}`);
+          log(`智能合约检查失败: ${error.message}`, "error");
+        }
+
+        updateStatus("诊断完成！查看下方结果", "success");
+        log("系统诊断完成", "success");
+      }
+
+      function openMainApp() {
+        log("打开主应用...", "info");
+        window.open("http://localhost:5173", "_blank");
+      }
+
+      async function testWalletConnection() {
+        try {
+          if (typeof window.ethereum === "undefined") {
+            throw new Error("MetaMask未安装");
+          }
+
+          log("开始测试钱包连接...", "info");
+
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts.length > 0) {
+            log(`钱包连接成功: ${accounts[0]}`, "success");
+
+            // 检查余额
+            const balanceHex = await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [accounts[0], "latest"],
+            });
+            const balanceWei = parseInt(balanceHex, 16);
+            const balanceEth = (balanceWei / Math.pow(10, 18)).toFixed(4);
+
+            log(`账户余额: ${balanceEth} ETH`, "info");
+
+            updateStatus(`钱包连接成功！地址: ${accounts[0]}`, "success");
+          } else {
+            throw new Error("没有可用的账户");
+          }
+        } catch (error) {
+          log(`钱包连接失败: ${error.message}`, "error");
+          updateStatus(`钱包连接失败: ${error.message}`, "error");
+        }
+      }
+
+      // 页面加载时自动运行诊断
+      window.addEventListener("load", () => {
+        log("诊断工具已加载", "info");
+        setTimeout(runDiagnostics, 1000);
+      });
+    </script>
+  </body>
+</html>
