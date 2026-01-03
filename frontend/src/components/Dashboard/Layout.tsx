@@ -12,7 +12,7 @@ export interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-transparent">
       {/* Sidebar */}
       <Sidebar />
 

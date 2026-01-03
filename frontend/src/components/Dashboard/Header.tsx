@@ -1,15 +1,17 @@
 /**
  * Header Component - 顶部导航栏
+ * 使用玻璃拟态效果的现代化导航栏
  */
 
 import React from "react";
-import { Button } from "../Common";
+import { GlassNavigation, GlassButton } from "../Glass";
 import {
   useAppStore,
   useWallet,
   useNotifications,
   useCurrentRole,
 } from "../../store";
+import { useRouter } from "../../hooks/useRouter";
 
 const MenuIcon = () => (
   <svg
@@ -80,6 +82,7 @@ export const Header: React.FC = () => {
   const wallet = useWallet();
   const notifications = useNotifications();
   const currentRole = useCurrentRole();
+  const { navigate } = useRouter();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -111,104 +114,114 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 lg:border-b-0">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        {/* Left side */}
-        <div className="flex items-center">
-          {/* Mobile menu button */}
-          <button
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <MenuIcon />
-          </button>
+    <GlassNavigation
+      variant="medium"
+      position="static"
+      scrollEffect={false}
+      className="border-b border-glass-border/30"
+    >
+      <GlassNavigation.Brand>
+        {/* Mobile menu button */}
+        <button
+          className="lg:hidden p-2 rounded-md text-gray-300 hover:text-white hover:bg-glass-light transition-colors"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <MenuIcon />
+        </button>
 
-          {/* Page title */}
-          <div className="ml-4 lg:ml-0">
-            <h1 className="text-xl font-semibold text-gray-900">
-              {getPageTitle(currentRole)}
-            </h1>
-          </div>
+        {/* Page title */}
+        <div className="ml-4 lg:ml-0">
+          <h1 className="text-xl font-semibold text-white">
+            {getPageTitle(currentRole)}
+          </h1>
+        </div>
+      </GlassNavigation.Brand>
+
+      <GlassNavigation.Menu>
+        {/* Role switcher */}
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-300">当前身份:</span>
+          <GlassButton
+            variant="secondary"
+            size="sm"
+            leftIcon={<SwitchIcon />}
+            onClick={switchRole}
+            className="text-sm"
+          >
+            {getRoleDisplayName(currentRole)}
+          </GlassButton>
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center space-x-4">
-          {/* Role switcher */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">当前身份:</span>
-            <Button
-              variant="outline"
-              size="sm"
-              icon={<SwitchIcon />}
-              onClick={switchRole}
-              className="text-sm"
-            >
-              {getRoleDisplayName(currentRole)}
-            </Button>
-          </div>
+        {/* Notifications */}
+        <button className="relative p-2 text-gray-300 hover:text-white hover:bg-glass-light rounded-lg transition-colors">
+          <BellIcon />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 block h-5 w-5 rounded-full bg-emergency-500 text-white text-xs flex items-center justify-center font-medium shadow-glow-red">
+              {unreadCount}
+            </span>
+          )}
+        </button>
 
-          {/* Notifications */}
-          <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md">
-            <BellIcon />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-            )}
-          </button>
-
-          {/* Wallet connection */}
-          <div className="flex items-center space-x-3">
-            {wallet.isConnected ? (
-              <div className="flex items-center space-x-3">
-                {/* Balance */}
-                <div className="hidden sm:block text-sm text-gray-700">
-                  <div className="font-medium">
-                    {wallet.balance
-                      ? `${formatBalance(wallet.balance)} ETH`
-                      : "0.0000 ETH"}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {wallet.address ? formatAddress(wallet.address) : ""}
-                  </div>
+        {/* Wallet connection */}
+        <div className="flex items-center space-x-3">
+          {wallet.isConnected ? (
+            <div className="flex items-center space-x-3">
+              {/* Balance */}
+              <div className="hidden sm:block text-sm text-gray-200">
+                <div className="font-medium">
+                  {wallet.balance
+                    ? `${formatBalance(wallet.balance)} ETH`
+                    : "0.0000 ETH"}
                 </div>
-
-                {/* Wallet indicator */}
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="hidden sm:inline text-sm text-gray-700">
-                    已连接
-                  </span>
+                <div className="text-xs text-gray-400">
+                  {wallet.address ? formatAddress(wallet.address) : ""}
                 </div>
-
-                {/* Disconnect button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDisconnect}
-                  className="hidden sm:inline-flex"
-                >
-                  断开连接
-                </Button>
               </div>
-            ) : (
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<WalletIcon />}
-                onClick={handleConnectWallet}
-              >
-                连接钱包
-              </Button>
-            )}
-          </div>
 
-          {/* Emergency button - only show for protected users */}
-          {currentRole === "protected_user" && (
-            <Button variant="emergency" size="sm" className="font-semibold">
-              紧急求助
-            </Button>
+              {/* Wallet indicator */}
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-success-400 rounded-full shadow-glow-green"></div>
+                <span className="hidden sm:inline text-sm text-gray-200">
+                  已连接
+                </span>
+              </div>
+
+              {/* Disconnect button */}
+              <GlassButton
+                variant="ghost"
+                size="sm"
+                onClick={handleDisconnect}
+                className="hidden sm:inline-flex"
+              >
+                断开连接
+              </GlassButton>
+            </div>
+          ) : (
+            <GlassButton
+              variant="primary"
+              size="sm"
+              glow
+              leftIcon={<WalletIcon />}
+              onClick={handleConnectWallet}
+            >
+              连接钱包
+            </GlassButton>
           )}
         </div>
-      </div>
-    </header>
+
+        {/* Emergency button - only show for protected users */}
+        {currentRole === "protected_user" && (
+          <GlassButton
+            variant="emergency"
+            size="sm"
+            glow
+            className="font-semibold"
+            onClick={() => navigate("emergency")}
+          >
+            紧急求助
+          </GlassButton>
+        )}
+      </GlassNavigation.Menu>
+    </GlassNavigation>
   );
 };

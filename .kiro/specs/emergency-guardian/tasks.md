@@ -614,7 +614,7 @@ emergency-guardian/
     - **输出文件**: `properties.test.tsx`
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 7.3**
 
-  - [ ] 9.3 实现紧急操作界面
+  - [x] 9.3 实现紧急操作界面
     - **技术栈**: React, TypeScript, Web3 Modal, Framer Motion
     - **实现步骤**:
       1. 创建`frontend/src/components/Emergency/`组件

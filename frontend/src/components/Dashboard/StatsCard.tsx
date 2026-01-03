@@ -1,9 +1,11 @@
 /**
  * StatsCard Component - 统计卡片组件
+ * 使用玻璃拟态效果和微交互动画的现代化统计卡片
  */
 
 import React from "react";
-import { Card, CardContent } from "../Common";
+import { GlassCard } from "../Glass";
+import { usePulseAnimation } from "../../animations/hooks";
 import { clsx } from "clsx";
 
 export interface StatsCardProps {
@@ -15,6 +17,8 @@ export interface StatsCardProps {
   };
   icon: React.ReactNode;
   color?: "blue" | "green" | "red" | "yellow" | "purple";
+  animationDelay?: number;
+  enablePulse?: boolean;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -23,23 +27,57 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   change,
   icon,
   color = "blue",
+  animationDelay = 0,
+  enablePulse = false,
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    red: "bg-red-50 text-red-600",
-    yellow: "bg-yellow-50 text-yellow-600",
-    purple: "bg-purple-50 text-purple-600",
+    blue: "bg-primary-500/10 text-primary-400 shadow-glow-blue/50",
+    green: "bg-success-500/10 text-success-400 shadow-glow-green/50",
+    red: "bg-emergency-500/10 text-emergency-400 shadow-glow-red/50",
+    yellow: "bg-warning-500/10 text-warning-400 shadow-glow-yellow/50",
+    purple: "bg-purple-500/10 text-purple-400 shadow-glow-purple/50",
   };
 
+  const glowColors = {
+    blue: "blue" as const,
+    green: "green" as const,
+    red: "red" as const,
+    yellow: "yellow" as const,
+    purple: "purple" as const,
+  };
+
+  const pulseColors = {
+    blue: "rgba(59, 130, 246, 0.3)",
+    green: "rgba(34, 197, 94, 0.3)",
+    red: "rgba(239, 68, 68, 0.3)",
+    yellow: "rgba(245, 158, 11, 0.3)",
+    purple: "rgba(147, 51, 234, 0.3)",
+  };
+
+  // 脉冲动画（用于重要数据变化时）
+  const pulseRef = usePulseAnimation(enablePulse, {
+    color: pulseColors[color],
+    duration: 2000,
+    intensity: 1.02,
+  });
+
   return (
-    <Card>
-      <CardContent>
+    <GlassCard
+      ref={pulseRef}
+      variant="medium"
+      glow={glowColors[color]}
+      hoverable
+      animateOnMount
+      animationDelay={animationDelay}
+      animationIntensity="medium"
+      className="transition-all duration-300 hover:shadow-lg"
+    >
+      <GlassCard.Body className="p-6">
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <div
               className={clsx(
-                "flex items-center justify-center w-8 h-8 rounded-md",
+                "flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-sm border border-white/20",
                 colorClasses[color]
               )}
             >
@@ -49,25 +87,23 @@ export const StatsCard: React.FC<StatsCardProps> = ({
 
           <div className="ml-5 w-0 flex-1">
             <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
+              <dt className="text-sm font-medium text-gray-300 truncate">
                 {title}
               </dt>
-              <dd className="flex items-baseline">
-                <div className="text-2xl font-semibold text-gray-900">
-                  {value}
-                </div>
+              <dd className="flex items-baseline mt-1">
+                <div className="text-2xl font-bold text-white">{value}</div>
                 {change && (
                   <div
                     className={clsx(
                       "ml-2 flex items-baseline text-sm font-semibold",
                       change.type === "increase"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-success-400"
+                        : "text-emergency-400"
                     )}
                   >
                     {change.type === "increase" ? (
                       <svg
-                        className="self-center flex-shrink-0 h-5 w-5 text-green-500"
+                        className="self-center flex-shrink-0 h-4 w-4 text-success-400"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -79,7 +115,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                       </svg>
                     ) : (
                       <svg
-                        className="self-center flex-shrink-0 h-5 w-5 text-red-500"
+                        className="self-center flex-shrink-0 h-4 w-4 text-emergency-400"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -101,7 +137,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             </dl>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </GlassCard.Body>
+    </GlassCard>
   );
 };

@@ -4,8 +4,8 @@
 
 import React, { useEffect } from "react";
 import { StatsCard } from "./StatsCard";
-import { PendingApprovals } from "./PendingApprovals";
-import { ProtectedUsers } from "./ProtectedUsers";
+import { PendingApprovals } from "./PendingApprovals.tsx";
+import { ProtectedUsers } from "./ProtectedUsers.tsx";
 import { useGuardianStats, useAppStore } from "../../store";
 import type { GuardianDashboardStats } from "../../types";
 
