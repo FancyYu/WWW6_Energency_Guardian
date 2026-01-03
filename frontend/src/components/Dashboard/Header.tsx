@@ -4,7 +4,12 @@
 
 import React from "react";
 import { Button } from "../Common";
-import { useAppStore, useWallet, useNotifications } from "../../store";
+import {
+  useAppStore,
+  useWallet,
+  useNotifications,
+  useCurrentRole,
+} from "../../store";
 
 const MenuIcon = () => (
   <svg
@@ -54,10 +59,27 @@ const WalletIcon = () => (
   </svg>
 );
 
+const SwitchIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+    />
+  </svg>
+);
+
 export const Header: React.FC = () => {
-  const { setSidebarOpen } = useAppStore();
+  const { setSidebarOpen, switchRole } = useAppStore();
   const wallet = useWallet();
   const notifications = useNotifications();
+  const currentRole = useCurrentRole();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -80,6 +102,14 @@ export const Header: React.FC = () => {
     console.log("Disconnect clicked");
   };
 
+  const getRoleDisplayName = (role: string) => {
+    return role === "protected_user" ? "用户" : "监护人";
+  };
+
+  const getPageTitle = (role: string) => {
+    return role === "protected_user" ? "仪表板" : "监护人控制台";
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 lg:border-b-0">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -95,12 +125,28 @@ export const Header: React.FC = () => {
 
           {/* Page title */}
           <div className="ml-4 lg:ml-0">
-            <h1 className="text-xl font-semibold text-gray-900">仪表板</h1>
+            <h1 className="text-xl font-semibold text-gray-900">
+              {getPageTitle(currentRole)}
+            </h1>
           </div>
         </div>
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
+          {/* Role switcher */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">当前身份:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<SwitchIcon />}
+              onClick={switchRole}
+              className="text-sm"
+            >
+              {getRoleDisplayName(currentRole)}
+            </Button>
+          </div>
+
           {/* Notifications */}
           <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md">
             <BellIcon />
@@ -155,10 +201,12 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Emergency button */}
-          <Button variant="emergency" size="sm" className="font-semibold">
-            紧急求助
-          </Button>
+          {/* Emergency button - only show for protected users */}
+          {currentRole === "protected_user" && (
+            <Button variant="emergency" size="sm" className="font-semibold">
+              紧急求助
+            </Button>
+          )}
         </div>
       </div>
     </header>

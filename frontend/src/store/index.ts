@@ -6,11 +6,13 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import type {
   User,
+  UserRole,
   Guardian,
   Emergency,
   WalletState,
   Notification,
   DashboardStats,
+  GuardianDashboardStats,
   ActivityLog,
 } from "../types";
 
@@ -19,6 +21,11 @@ interface AppState {
   // 用户状态
   user: User | null;
   setUser: (user: User | null) => void;
+
+  // 角色切换
+  currentRole: UserRole;
+  setCurrentRole: (role: UserRole) => void;
+  switchRole: () => void;
 
   // 钱包状态
   wallet: WalletState;
@@ -48,6 +55,10 @@ interface AppState {
   stats: DashboardStats | null;
   setStats: (stats: DashboardStats) => void;
 
+  // 监护人仪表板统计
+  guardianStats: GuardianDashboardStats | null;
+  setGuardianStats: (stats: GuardianDashboardStats) => void;
+
   // 活动日志
   activities: ActivityLog[];
   setActivities: (activities: ActivityLog[]) => void;
@@ -70,9 +81,10 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         // 初始状态
         user: null,
+        currentRole: "protected_user" as UserRole,
         wallet: {
           isConnected: false,
         },
@@ -80,6 +92,7 @@ export const useAppStore = create<AppState>()(
         emergencies: [],
         notifications: [],
         stats: null,
+        guardianStats: null,
         activities: [],
         sidebarOpen: true,
         loading: {
@@ -90,6 +103,16 @@ export const useAppStore = create<AppState>()(
 
         // 用户操作
         setUser: (user) => set({ user }),
+
+        // 角色切换操作
+        setCurrentRole: (role) => set({ currentRole: role }),
+
+        switchRole: () => {
+          const { currentRole } = get();
+          const newRole =
+            currentRole === "protected_user" ? "guardian" : "protected_user";
+          set({ currentRole: newRole });
+        },
 
         // 钱包操作
         setWallet: (wallet) =>
@@ -153,6 +176,7 @@ export const useAppStore = create<AppState>()(
 
         // 统计操作
         setStats: (stats) => set({ stats }),
+        setGuardianStats: (guardianStats) => set({ guardianStats }),
 
         // 活动日志操作
         setActivities: (activities) => set({ activities }),
@@ -175,6 +199,7 @@ export const useAppStore = create<AppState>()(
         name: "emergency-guardian-store",
         partialize: (state) => ({
           user: state.user,
+          currentRole: state.currentRole,
           wallet: state.wallet,
           sidebarOpen: state.sidebarOpen,
         }),
@@ -188,12 +213,15 @@ export const useAppStore = create<AppState>()(
 
 // 选择器 hooks
 export const useUser = () => useAppStore((state) => state.user);
+export const useCurrentRole = () => useAppStore((state) => state.currentRole);
 export const useWallet = () => useAppStore((state) => state.wallet);
 export const useGuardians = () => useAppStore((state) => state.guardians);
 export const useEmergencies = () => useAppStore((state) => state.emergencies);
 export const useNotifications = () =>
   useAppStore((state) => state.notifications);
 export const useStats = () => useAppStore((state) => state.stats);
+export const useGuardianStats = () =>
+  useAppStore((state) => state.guardianStats);
 export const useActivities = () => useAppStore((state) => state.activities);
 export const useLoading = () => useAppStore((state) => state.loading);
 export const useSidebarOpen = () => useAppStore((state) => state.sidebarOpen);

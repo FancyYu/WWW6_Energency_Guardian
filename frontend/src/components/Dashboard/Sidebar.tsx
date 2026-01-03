@@ -4,7 +4,7 @@
 
 import React from "react";
 import { clsx } from "clsx";
-import { useAppStore } from "../../store";
+import { useAppStore, useCurrentRole } from "../../store";
 
 // 图标组件 (简化版，实际项目中可以使用 Heroicons 或 Lucide React)
 const HomeIcon = () => (
@@ -109,6 +109,22 @@ const ChartIcon = () => (
   </svg>
 );
 
+const CheckCircleIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
 interface NavigationItem {
   name: string;
   href: string;
@@ -117,7 +133,8 @@ interface NavigationItem {
   badge?: number;
 }
 
-const navigation: NavigationItem[] = [
+// 用户角色导航
+const userNavigation: NavigationItem[] = [
   { name: "仪表板", href: "/", icon: HomeIcon, current: true },
   { name: "紧急情况", href: "/emergencies", icon: ShieldIcon },
   { name: "监护人", href: "/guardians", icon: UsersIcon },
@@ -126,8 +143,28 @@ const navigation: NavigationItem[] = [
   { name: "设置", href: "/settings", icon: CogIcon },
 ];
 
+// 监护人角色导航
+const guardianNavigation: NavigationItem[] = [
+  { name: "监护人控制台", href: "/", icon: HomeIcon, current: true },
+  { name: "待审批", href: "/approvals", icon: CheckCircleIcon, badge: 2 },
+  { name: "保护用户", href: "/protected-users", icon: UsersIcon },
+  { name: "紧急情况", href: "/emergencies", icon: ShieldIcon },
+  { name: "通知", href: "/notifications", icon: BellIcon, badge: 1 },
+  { name: "监护报告", href: "/reports", icon: ChartIcon },
+  { name: "设置", href: "/guardian-settings", icon: CogIcon },
+];
+
 export const Sidebar: React.FC = () => {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
+  const currentRole = useCurrentRole();
+
+  // 根据角色选择导航
+  const navigation =
+    currentRole === "protected_user" ? userNavigation : guardianNavigation;
+  const appTitle =
+    currentRole === "protected_user"
+      ? "Emergency Guardian"
+      : "Guardian Console";
 
   return (
     <>
@@ -157,7 +194,7 @@ export const Sidebar: React.FC = () => {
               </div>
               <div className="ml-3">
                 <h1 className="text-lg font-semibold text-gray-900">
-                  Emergency Guardian
+                  {appTitle}
                 </h1>
               </div>
             </div>
@@ -215,11 +252,15 @@ export const Sidebar: React.FC = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">U</span>
+                  <span className="text-sm font-medium text-white">
+                    {currentRole === "protected_user" ? "U" : "G"}
+                  </span>
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">用户</p>
+                <p className="text-sm font-medium text-gray-700">
+                  {currentRole === "protected_user" ? "用户" : "监护人"}
+                </p>
                 <p className="text-xs text-gray-500">0x742d...6C87</p>
               </div>
             </div>

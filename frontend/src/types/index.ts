@@ -2,6 +2,14 @@
  * 通用类型定义
  */
 
+// 用户角色类型
+export const UserRole = {
+  PROTECTED_USER: "protected_user",
+  GUARDIAN: "guardian",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
 // 用户信息
 export interface User {
   id: string;
@@ -9,6 +17,7 @@ export interface User {
   name?: string;
   email?: string;
   avatar?: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -135,6 +144,15 @@ export interface DashboardStats {
   activeGuardians: number;
   totalAmount: string; // ETH
   averageResponseTime: number; // 分钟
+}
+
+// 监护人仪表板统计
+export interface GuardianDashboardStats {
+  totalProtectedUsers: number;
+  pendingApprovals: number;
+  totalApprovals: number;
+  averageResponseTime: number; // 分钟
+  totalAmountProtected: string; // ETH
 }
 
 // 活动日志

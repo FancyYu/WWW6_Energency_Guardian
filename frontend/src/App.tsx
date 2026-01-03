@@ -2,14 +2,21 @@
  * App Component - 主应用组件
  */
 
-import { Layout, Dashboard } from "./components/Dashboard";
+import { Layout, Dashboard, GuardianDashboard } from "./components/Dashboard";
+import { useCurrentRole } from "./store";
 import "./index.css";
 
 function App() {
+  const currentRole = useCurrentRole();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Layout>
-        <Dashboard />
+        {currentRole === "protected_user" ? (
+          <Dashboard />
+        ) : (
+          <GuardianDashboard />
+        )}
       </Layout>
     </div>
   );
