@@ -1,0 +1,143 @@
+version: "3.8"
+
+networks:
+  guardian-network:
+    driver: bridge
+
+services:
+  # Redis for AI agents communication and caching
+  redis:
+    image: redis:7-alpine
+    container_name: guardian-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - guardian-network
+    command: redis-server --appendonly yes
+
+  # IPFS node for decentralized storage
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: guardian-ipfs-dev
+    ports:
+      - "4001:4001" # P2P port
+      - "5001:5001" # API port
+      - "8080:8080" # Gateway port
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - guardian-network
+    environment:
+      - IPFS_PROFILE=server
+
+  # PostgreSQL for backend data
+  postgres:
+    image: postgres:15-alpine
+    container_name: guardian-postgres-dev
+    environment:
+      POSTGRES_DB: emergency_guardian
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - guardian-network
+
+  # AI Agents Service (Development mode with hot reload)
+  ai-agents:
+    build:
+      context: ./ai-agents
+      dockerfile: Dockerfile.dev
+    container_name: guardian-ai-agents-dev
+    ports:
+      - "8001:8001"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://guardian:guardian_pass@postgres:5432/emergency_guardian
+      - IPFS_API_URL=http://ipfs:5001
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      - redis
+      - postgres
+      - ipfs
+    networks:
+      - guardian-network
+    volumes:
+      - ./ai-agents:/app
+      - /app/__pycache__
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # Storage Service (Development mode)
+  storage-service:
+    build:
+      context: ./storage-service
+      dockerfile: Dockerfile.dev
+    container_name: guardian-storage-dev
+    ports:
+      - "8002:8002"
+    environment:
+      - IPFS_API_URL=http://ipfs:5001
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      - ipfs
+      - redis
+    networks:
+      - guardian-network
+    volumes:
+      - ./storage-service:/app
+
+  # Backend Service (Development mode with hot reload)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: guardian-backend-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://guardian:guardian_pass@postgres:5432/emergency_guardian
+      - REDIS_URL=redis://redis:6379
+      - AI_AGENTS_URL=http://ai-agents:8001
+      - STORAGE_SERVICE_URL=http://storage-service:8002
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - postgres
+      - redis
+      - ai-agents
+      - storage-service
+    networks:
+      - guardian-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend (Development mode with hot reload)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: guardian-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3001
+      - VITE_STORAGE_SERVICE_URL=http://localhost:8002
+      - VITE_AI_AGENTS_URL=http://localhost:8001
+    networks:
+      - guardian-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  redis_data:
+  ipfs_data:
+  postgres_data:

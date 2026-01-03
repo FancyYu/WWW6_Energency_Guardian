@@ -1,0 +1,55 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Backend service
+  - job_name: "backend"
+    static_configs:
+      - targets: ["backend:3001"]
+    metrics_path: "/metrics"
+    scrape_interval: 30s
+
+  # AI Agents service
+  - job_name: "ai-agents"
+    static_configs:
+      - targets: ["ai-agents:8001"]
+    metrics_path: "/metrics"
+    scrape_interval: 30s
+
+  # Storage service
+  - job_name: "storage-service"
+    static_configs:
+      - targets: ["storage-service:8002"]
+    metrics_path: "/metrics"
+    scrape_interval: 30s
+
+  # Redis
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+
+  # PostgreSQL
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres:5432"]
+
+  # IPFS
+  - job_name: "ipfs"
+    static_configs:
+      - targets: ["ipfs:5001"]
+    metrics_path: "/debug/metrics/prometheus"
+
+  # Nginx
+  - job_name: "nginx"
+    static_configs:
+      - targets: ["nginx:80"]
