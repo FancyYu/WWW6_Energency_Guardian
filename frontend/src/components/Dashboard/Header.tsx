@@ -5,7 +5,6 @@
 import React from "react";
 import { Button } from "../Common";
 import { useAppStore, useWallet, useNotifications } from "../../store";
-import { useWeb3 } from "../../hooks/useWeb3";
 
 const MenuIcon = () => (
   <svg
@@ -59,7 +58,6 @@ export const Header: React.FC = () => {
   const { setSidebarOpen } = useAppStore();
   const wallet = useWallet();
   const notifications = useNotifications();
-  const { connectWallet, disconnect } = useWeb3();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -70,6 +68,16 @@ export const Header: React.FC = () => {
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
     return num.toFixed(4);
+  };
+
+  const handleConnectWallet = () => {
+    // 临时的模拟连接
+    console.log("Connect wallet clicked");
+  };
+
+  const handleDisconnect = () => {
+    // 临时的模拟断开
+    console.log("Disconnect clicked");
   };
 
   return (
@@ -129,7 +137,7 @@ export const Header: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={disconnect}
+                  onClick={handleDisconnect}
                   className="hidden sm:inline-flex"
                 >
                   断开连接
@@ -140,7 +148,7 @@ export const Header: React.FC = () => {
                 variant="primary"
                 size="sm"
                 icon={<WalletIcon />}
-                onClick={() => connectWallet()}
+                onClick={handleConnectWallet}
               >
                 连接钱包
               </Button>

@@ -7,9 +7,11 @@ import "./index.css";
 
 function App() {
   return (
-    <Layout>
-      <Dashboard />
-    </Layout>
+    <div className="min-h-screen bg-gray-50">
+      <Layout>
+        <Dashboard />
+      </Layout>
+    </div>
   );
 }
 
