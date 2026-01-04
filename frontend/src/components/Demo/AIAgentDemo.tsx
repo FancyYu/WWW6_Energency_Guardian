@@ -54,7 +54,7 @@ export const AIAgentDemo: React.FC<{ emergencyData?: any }> = ({
       },
       {
         stage: "资源匹配",
-        details: "匹配最适合的监护人和资源",
+        details: "匹配最适合的守护者和资源",
       },
       {
         stage: "策略生成",
@@ -135,7 +135,7 @@ export const AIAgentDemo: React.FC<{ emergencyData?: any }> = ({
     const aiRecommendations: AIRecommendation[] = [
       {
         type: "action",
-        title: "优先联系医疗专家监护人",
+        title: "优先联系医疗专家守护者",
         description: "基于紧急类型分析，建议优先通知具有医疗背景的监护人张医生",
         confidence: 0.94,
         priority: "high",

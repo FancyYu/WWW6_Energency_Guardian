@@ -170,7 +170,7 @@ export const EmergencyPage: React.FC = () => {
         id: `notification-${Date.now()}`,
         type: "emergency_created",
         title: "紧急请求已创建",
-        message: `您的紧急请求"${request.title}"已成功创建，等待监护人审批`,
+        message: `您的紧急请求"${request.title}"已成功创建，等待守护者审批`,
         isRead: false,
         createdAt: new Date(),
       });

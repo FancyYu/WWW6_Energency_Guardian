@@ -137,15 +137,15 @@ interface NavigationItem {
 const userNavigation: NavigationItem[] = [
   { name: "仪表板", href: "/", icon: HomeIcon, current: true },
   { name: "紧急情况", href: "/emergencies", icon: ShieldIcon },
-  { name: "监护人", href: "/guardians", icon: UsersIcon },
+  { name: "守护者", href: "/guardians", icon: UsersIcon },
   { name: "通知", href: "/notifications", icon: BellIcon, badge: 3 },
   { name: "活动记录", href: "/activities", icon: ChartIcon },
   { name: "设置", href: "/settings", icon: CogIcon },
 ];
 
-// 监护人角色导航
+// 守护者角色导航
 const guardianNavigation: NavigationItem[] = [
-  { name: "监护人控制台", href: "/", icon: HomeIcon, current: true },
+  { name: "守护者控制台", href: "/", icon: HomeIcon, current: true },
   { name: "待审批", href: "/approvals", icon: CheckCircleIcon, badge: 2 },
   { name: "保护用户", href: "/protected-users", icon: UsersIcon },
   { name: "紧急情况", href: "/emergencies", icon: ShieldIcon },
@@ -259,7 +259,7 @@ export const Sidebar: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700">
-                  {currentRole === "protected_user" ? "用户" : "监护人"}
+                  {currentRole === "protected_user" ? "用户" : "守护者"}
                 </p>
                 <p className="text-xs text-gray-500">0x742d...6C87</p>
               </div>

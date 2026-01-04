@@ -31,7 +31,7 @@ interface AppState {
   wallet: WalletState;
   setWallet: (wallet: Partial<WalletState>) => void;
 
-  // 监护人状态
+  // 守护者状态
   guardians: Guardian[];
   setGuardians: (guardians: Guardian[]) => void;
   addGuardian: (guardian: Guardian) => void;
@@ -55,7 +55,7 @@ interface AppState {
   stats: DashboardStats | null;
   setStats: (stats: DashboardStats) => void;
 
-  // 监护人仪表板统计
+  // 守护者仪表板统计
   guardianStats: GuardianDashboardStats | null;
   setGuardianStats: (stats: GuardianDashboardStats) => void;
 
@@ -120,7 +120,7 @@ export const useAppStore = create<AppState>()(
             wallet: { ...state.wallet, ...wallet },
           })),
 
-        // 监护人操作
+        // 守护者操作
         setGuardians: (guardians) => set({ guardians }),
 
         addGuardian: (guardian) =>
@@ -229,7 +229,7 @@ export const useAppStore = create<AppState>()(
               }));
             }
 
-            // 转换监护人中的日期字段
+            // 转换守护者中的日期字段
             if (state.guardians) {
               state.guardians = state.guardians.map((guardian) => ({
                 ...guardian,

@@ -35,7 +35,7 @@ export const VerificationFlow: React.FC<VerificationFlowProps> = ({
     { id: 1, title: "紧急请求详情", icon: "📋" },
     { id: 2, title: "AI智能分析", icon: "🤖" },
     { id: 3, title: "零知识证明", icon: "🔐" },
-    { id: 4, title: "监护人审批", icon: "👥" },
+    { id: 4, title: "守护者审批", icon: "👥" },
   ];
 
   useEffect(() => {
@@ -60,23 +60,23 @@ export const VerificationFlow: React.FC<VerificationFlowProps> = ({
         id: "zk_proof",
         title: "零知识证明验证",
         status: emergency.status === "draft" ? "pending" : "completed",
-        description: "验证监护人身份和授权的零知识证明",
+        description: "验证守护者身份和授权的零知识证明",
       },
       {
         id: "notification",
-        title: "通知监护人",
+        title: "通知守护者",
         status: emergency.status === "draft" ? "pending" : "completed",
         timestamp:
           emergency.status !== "draft" ? emergency.createdAt : undefined,
-        description: "正在通知所有监护人审批此紧急请求",
+        description: "正在通知所有守护者审批此紧急请求",
       },
       {
         id: "guardian_approval",
-        title: "监护人审批",
+        title: "守护者审批",
         status: getApprovalStatus(emergency.approvals),
         description: `需要 ${getRequiredApprovals(
           emergency.level
-        )} 个监护人审批`,
+        )} 个守护者审批`,
       },
       {
         id: "execution",
@@ -417,7 +417,7 @@ export const VerificationFlow: React.FC<VerificationFlowProps> = ({
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-900">
-                    👥 监护人审批状态
+                    👥 守护者审批状态
                   </h3>
                   <Badge variant="primary">
                     {getApprovalProgress().approved}/
@@ -506,7 +506,7 @@ export const VerificationFlow: React.FC<VerificationFlowProps> = ({
                         </h4>
                       </div>
                       <p className="text-green-700 text-sm mb-2">
-                        所有必要的监护人已批准，资金已成功转移
+                        所有必要的守护者已批准，资金已成功转移
                       </p>
                       {emergency.executionTx && (
                         <p className="text-xs text-green-600 font-mono">

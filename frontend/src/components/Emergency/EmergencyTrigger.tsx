@@ -403,7 +403,7 @@ export const EmergencyTrigger: React.FC<EmergencyTriggerProps> = ({
                       确认提交
                     </h3>
                     <p className="mt-1 text-sm text-yellow-700">
-                      提交后将立即通知所有监护人，请确认信息无误。
+                      提交后将立即通知所有守护者，请确认信息无误。
                     </p>
                   </div>
                 </div>

@@ -183,9 +183,9 @@ export class EmergencyManagementService {
   }
 
   /**
-   * 获取用户的监护人列表
+   * 获取用户的守护者列表
    * @param userAddress 用户地址
-   * @returns 监护人地址列表
+   * @returns 守护者地址列表
    */
   async getGuardians(userAddress?: string): Promise<string[]> {
     const contract = await this.initContract();
@@ -249,7 +249,7 @@ export class EmergencyManagementService {
   /**
    * 更新时间锁配置
    * @param emergencyTimelock 紧急提议时间锁（秒）
-   * @param guardianChangeTimelock 监护人变更时间锁（秒）
+   * @param guardianChangeTimelock 守护者变更时间锁（秒）
    * @param gracePeriod 宽限期（秒）
    * @param options 交易选项
    * @returns 交易响应
@@ -293,8 +293,8 @@ export class EmergencyManagementService {
   }
 
   /**
-   * 添加监护人
-   * @param guardianAddress 监护人地址
+   * 添加守护者
+   * @param guardianAddress 守护者地址
    * @param zkProof ZK证明
    * @param options 交易选项
    * @returns 交易响应
@@ -315,8 +315,8 @@ export class EmergencyManagementService {
   }
 
   /**
-   * 移除监护人
-   * @param guardianAddress 监护人地址
+   * 移除守护者
+   * @param guardianAddress 守护者地址
    * @param zkProof ZK证明
    * @param options 交易选项
    * @returns 交易响应
@@ -395,7 +395,7 @@ export class EmergencyManagementService {
   /**
    * 执行支付
    * @param proposalId 提案ID
-   * @param signatures 监护人签名数组
+   * @param signatures 守护者签名数组
    * @param options 交易选项
    * @returns 交易响应
    */
@@ -476,7 +476,7 @@ export class ZKProofVerifierService {
   }
 
   /**
-   * 验证监护人身份证明
+   * 验证守护者身份证明
    * @param proof ZK证明
    * @param publicInputHash 公共输入哈希
    * @returns 验证结果

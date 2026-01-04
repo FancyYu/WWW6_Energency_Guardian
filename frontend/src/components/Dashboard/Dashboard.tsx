@@ -122,7 +122,7 @@ export const Dashboard: React.FC = () => {
         />
 
         <StatsCard
-          title="活跃监护人"
+          title="活跃守护者"
           value={`${displayStats.activeGuardians}/${displayStats.totalGuardians}`}
           icon={<UsersIcon />}
           color="green"
@@ -192,7 +192,7 @@ export const Dashboard: React.FC = () => {
                   紧急求助
                 </h3>
                 <p className="text-sm text-gray-300">
-                  立即创建紧急情况并通知监护人
+                  立即创建紧急情况并通知守护者
                 </p>
               </div>
             </GlassButton>
@@ -212,10 +212,10 @@ export const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-medium text-white mb-2">
-                  添加监护人
+                  添加守护者
                 </h3>
                 <p className="text-sm text-gray-300">
-                  邀请新的监护人保护您的资产
+                  邀请新的守护者保护您的资产
                 </p>
               </div>
             </GlassButton>

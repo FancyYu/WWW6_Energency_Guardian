@@ -352,7 +352,7 @@ export const OperationMonitor: React.FC<OperationMonitorProps> = ({
                     有 {stats.active} 个紧急操作正在进行中
                   </p>
                   <p className="text-sm text-blue-600">
-                    请密切关注操作进度和监护人响应
+                    请密切关注操作进度和守护者响应
                   </p>
                 </div>
               </div>
@@ -380,7 +380,7 @@ export const OperationMonitor: React.FC<OperationMonitorProps> = ({
                     等待审批的请求较多 ({stats.pending} 个)
                   </p>
                   <p className="text-sm text-yellow-600">
-                    建议联系监护人加快审批流程
+                    建议联系守护者加快审批流程
                   </p>
                 </div>
               </div>

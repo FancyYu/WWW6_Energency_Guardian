@@ -1,5 +1,5 @@
 /**
- * GuardianStatus Component - 监护人状态组件
+ * GuardianStatus Component - 守护者状态组件
  */
 
 import React from "react";
@@ -125,7 +125,7 @@ export const GuardianStatus: React.FC = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">监护人状态</h3>
+          <h3 className="text-lg font-medium text-gray-900">守护者状态</h3>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">
               {activeGuardians.length}/{guardians.length} 在线
@@ -217,17 +217,17 @@ export const GuardianStatus: React.FC = () => {
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              没有监护人
+              没有守护者
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              开始添加监护人来保护您的资产。
+              开始添加守护者来保护您的资产。
             </p>
             <div className="mt-6">
               <a
                 href="/guardians"
                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
               >
-                添加监护人
+                添加守护者
               </a>
             </div>
           </div>

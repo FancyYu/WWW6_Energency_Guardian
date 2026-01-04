@@ -59,7 +59,7 @@ export const PendingApprovals: React.FC = () => {
   const emergencies = useEmergencies();
   const { updateEmergency, addActivity, addNotification } = useAppStore();
 
-  // 当前监护人ID（基于角色切换）
+  // 当前守护者ID（基于角色切换）
   const [currentGuardianId, setCurrentGuardianId] =
     React.useState("guardian-001");
 
@@ -87,14 +87,14 @@ export const PendingApprovals: React.FC = () => {
     const emergency = emergencies.find((e) => e.id === emergencyId);
     if (!emergency) return;
 
-    // 使用当前选择的监护人ID
+    // 使用当前选择的守护者ID
     const updatedApprovals = emergency.approvals.map((approval) =>
       approval.guardianId === currentGuardianId
         ? { ...approval, status: "approved" as const, timestamp: new Date() }
         : approval
     );
 
-    // 检查是否所有监护人都已批准
+    // 检查是否所有守护者都已批准
     const allApproved = updatedApprovals.every(
       (approval) => approval.status === "approved"
     );
@@ -110,11 +110,11 @@ export const PendingApprovals: React.FC = () => {
       }),
     });
 
-    // 获取当前监护人名称
+    // 获取当前守护者名称
     const currentGuardian = emergency.approvals.find(
       (a) => a.guardianId === currentGuardianId
     );
-    const guardianName = currentGuardian?.guardianName || "监护人";
+    const guardianName = currentGuardian?.guardianName || "守护者";
 
     // 添加活动日志
     addActivity({
@@ -130,7 +130,7 @@ export const PendingApprovals: React.FC = () => {
       type: "emergency_approved",
       title: allApproved ? "紧急请求已执行" : "紧急请求已批准",
       message: allApproved
-        ? `紧急请求"${emergency.title}"已获得所有监护人批准并执行`
+        ? `紧急请求"${emergency.title}"已获得所有守护者批准并执行`
         : `${guardianName}已批准紧急请求"${emergency.title}"`,
       isRead: false,
       createdAt: new Date(),
@@ -162,11 +162,11 @@ export const PendingApprovals: React.FC = () => {
       updatedAt: new Date(),
     });
 
-    // 获取当前监护人名称
+    // 获取当前守护者名称
     const currentGuardian = emergency.approvals.find(
       (a) => a.guardianId === currentGuardianId
     );
-    const guardianName = currentGuardian?.guardianName || "监护人";
+    const guardianName = currentGuardian?.guardianName || "守护者";
 
     // 添加活动日志
     addActivity({

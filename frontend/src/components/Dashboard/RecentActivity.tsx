@@ -195,7 +195,7 @@ export const RecentActivity: React.FC = () => {
                         size="sm"
                       >
                         {activity.type === "emergency_created" && "紧急"}
-                        {activity.type === "guardian_added" && "监护人"}
+                        {activity.type === "guardian_added" && "守护者"}
                         {activity.type === "emergency_approved" && "批准"}
                         {activity.type === "emergency_executed" && "执行"}
                       </Badge>

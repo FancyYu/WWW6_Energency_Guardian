@@ -142,11 +142,11 @@ export const Header: React.FC = () => {
   };
 
   const getRoleDisplayName = (role: string) => {
-    return role === "protected_user" ? "用户" : "监护人";
+    return role === "protected_user" ? "用户" : "守护者";
   };
 
   const getPageTitle = (role: string) => {
-    return role === "protected_user" ? "仪表板" : "监护人控制台";
+    return role === "protected_user" ? "仪表板" : "守护者控制台";
   };
 
   return (

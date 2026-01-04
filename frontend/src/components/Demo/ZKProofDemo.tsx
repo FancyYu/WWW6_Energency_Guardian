@@ -30,7 +30,7 @@ export const ZKProofDemo: React.FC<{ emergencyId?: string }> = ({
     const proofTypes = [
       {
         type: "Guardian Identity Proof",
-        details: "证明监护人身份而不泄露个人信息",
+        details: "证明守护者身份而不泄露个人信息",
       },
       {
         type: "Emergency State Proof",

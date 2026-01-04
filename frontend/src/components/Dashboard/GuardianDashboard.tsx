@@ -1,5 +1,5 @@
 /**
- * GuardianDashboard Component - 监护人仪表板组件
+ * GuardianDashboard Component - 守护者仪表板组件
  */
 
 import React, { useEffect } from "react";
@@ -115,7 +115,7 @@ export const GuardianDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome section */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">监护人控制台</h2>
+        <h2 className="text-2xl font-bold text-gray-900">守护者控制台</h2>
         <p className="mt-1 text-sm text-gray-600">
           管理您保护的用户和处理紧急审批请求。
         </p>
@@ -191,7 +191,7 @@ export const GuardianDashboard: React.FC = () => {
       {/* Quick actions */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">监护人操作</h3>
+          <h3 className="text-lg font-medium text-gray-900">守护者操作</h3>
         </div>
         <div className="px-6 py-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -263,7 +263,7 @@ export const GuardianDashboard: React.FC = () => {
               <div className="mt-4">
                 <h3 className="text-lg font-medium text-gray-900">
                   <span className="absolute inset-0" aria-hidden="true" />
-                  监护人设置
+                  守护者设置
                 </h3>
                 <p className="mt-2 text-sm text-gray-500">配置通知和响应偏好</p>
               </div>
