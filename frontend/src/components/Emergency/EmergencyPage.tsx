@@ -9,6 +9,7 @@ import { OperationMonitor } from "./OperationMonitor";
 import { Button } from "../Common/Button";
 import { Badge } from "../Common/Badge";
 import { useEmergencies, useAppStore } from "../../store";
+import { useRouter } from "../../context/RouterContext";
 import type {
   Emergency,
   EmergencyType,
@@ -36,6 +37,7 @@ export const EmergencyPage: React.FC = () => {
 
   const emergencies = useEmergencies();
   const { addEmergency, addActivity, addNotification } = useAppStore();
+  const { navigate } = useRouter();
 
   // Mock data for demonstration
   useEffect(() => {
@@ -228,6 +230,29 @@ export const EmergencyPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
+              {/* 返回主页按钮 */}
+              <button
+                onClick={() => navigate("dashboard")}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span className="text-sm font-medium">返回主页</span>
+              </button>
+
+              <div className="h-6 w-px bg-gray-300"></div>
+
               <h1 className="text-xl font-semibold text-gray-900">
                 紧急操作中心
               </h1>

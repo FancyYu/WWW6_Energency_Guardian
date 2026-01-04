@@ -10,8 +10,10 @@ import { GuardiansPage } from "./components/Guardians/GuardiansPage";
 import { SettingsPage } from "./components/Settings/SettingsPage";
 import { ActivitiesPage } from "./components/Activities/ActivitiesPage";
 import { DebugPanel } from "./components/Debug/DebugPanel";
+import { WalletConnectCover } from "./components/Auth/WalletConnectCover";
 import { useCurrentRole, useAppStore } from "./store";
 import { RouterProvider, useRouter } from "./context/RouterContext";
+import { useWeb3 } from "./hooks/useWeb3";
 import {
   PageTransitionWrapper,
   PageLoader,
@@ -23,9 +25,70 @@ import "./index.css";
 function AppContent() {
   const currentRole = useCurrentRole();
   const { currentRoute } = useRouter();
+  const { isConnected, connectionStatus } = useWeb3();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRouteChanging, setIsRouteChanging] = useState(false);
   const [routeKey, setRouteKey] = useState(0);
+  const [hasEverConnected, setHasEverConnected] = useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+
+  // 检查是否曾经连接过钱包
+  useEffect(() => {
+    const checkConnectionState = async () => {
+      const everConnected =
+        localStorage.getItem("sheGuardian_hasConnected") === "true";
+      const lastConnected = localStorage.getItem("sheGuardian_lastConnected");
+
+      // 检查连接是否过期（24小时）
+      if (everConnected && lastConnected) {
+        const lastConnectedTime = parseInt(lastConnected);
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+
+        if (now - lastConnectedTime > twentyFourHours) {
+          // 连接已过期，清除状态
+          localStorage.removeItem("sheGuardian_hasConnected");
+          localStorage.removeItem("sheGuardian_walletType");
+          localStorage.removeItem("sheGuardian_lastConnected");
+          setHasEverConnected(false);
+        } else {
+          setHasEverConnected(true);
+        }
+      } else {
+        setHasEverConnected(everConnected);
+      }
+
+      setIsCheckingConnection(false);
+    };
+
+    checkConnectionState();
+  }, []);
+
+  // 监听连接状态变化
+  useEffect(() => {
+    if (isConnected) {
+      localStorage.setItem("sheGuardian_hasConnected", "true");
+      localStorage.setItem("sheGuardian_lastConnected", Date.now().toString());
+      setHasEverConnected(true);
+    }
+  }, [isConnected]);
+
+  // 监听断开连接事件
+  useEffect(() => {
+    if (
+      hasEverConnected &&
+      !isConnected &&
+      connectionStatus === "disconnected" &&
+      !isCheckingConnection
+    ) {
+      console.log("Wallet disconnected, clearing connection state...");
+      // 钱包断开连接，清除状态并返回登录页面
+      localStorage.removeItem("sheGuardian_hasConnected");
+      localStorage.removeItem("sheGuardian_walletType");
+      localStorage.removeItem("sheGuardian_lastConnected");
+      setHasEverConnected(false);
+    }
+  }, [isConnected, connectionStatus, hasEverConnected, isCheckingConnection]);
 
   // 初始化动画系统和演示数据
   useEffect(() => {
@@ -82,15 +145,20 @@ function AppContent() {
   };
 
   // 显示初始加载器
-  if (isInitialLoading) {
+  if (isInitialLoading || isCheckingConnection) {
     return (
       <PageLoader
         isLoading={true}
         variant="wave"
         size="lg"
-        message="Initializing Emergency Guardian..."
+        message="Initializing SheGuardian..."
       />
     );
+  }
+
+  // 只在从未连接过钱包时显示登录封面
+  if (!hasEverConnected) {
+    return <WalletConnectCover />;
   }
 
   return (

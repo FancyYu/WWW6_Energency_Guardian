@@ -140,3 +140,4 @@ zk-circuits/keys/
 
 # Local development
 .local/
+.vercel

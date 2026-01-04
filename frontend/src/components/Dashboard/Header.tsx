@@ -128,6 +128,14 @@ export const Header: React.FC = () => {
         chainId: undefined,
         networkName: undefined,
       });
+
+      // 清除连接状态并返回登录页面
+      localStorage.removeItem("sheGuardian_hasConnected");
+      localStorage.removeItem("sheGuardian_walletType");
+      localStorage.removeItem("sheGuardian_lastConnected");
+
+      // 刷新页面以返回登录界面
+      window.location.reload();
     } catch (error) {
       console.error("Failed to disconnect wallet:", error);
     }
@@ -219,9 +227,23 @@ export const Header: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleDisconnect}
-                className="hidden sm:inline-flex"
+                className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                title="断开钱包连接"
               >
-                断开连接
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span className="hidden sm:inline ml-1">断开</span>
               </GlassButton>
             </div>
           ) : (

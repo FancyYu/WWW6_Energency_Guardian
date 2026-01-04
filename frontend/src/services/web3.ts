@@ -122,6 +122,61 @@ export class Web3Service {
 
   constructor() {
     this.initializeEventListeners();
+    this.restoreConnectionState();
+  }
+
+  /**
+   * 恢复连接状态
+   */
+  private async restoreConnectionState(): Promise<void> {
+    try {
+      // 检查是否有保存的连接状态
+      const savedWalletType = localStorage.getItem("sheGuardian_walletType");
+      const hasConnected =
+        localStorage.getItem("sheGuardian_hasConnected") === "true";
+
+      if (
+        hasConnected &&
+        savedWalletType &&
+        typeof window !== "undefined" &&
+        window.ethereum
+      ) {
+        // 检查是否仍然连接
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+
+        if (accounts && accounts.length > 0) {
+          // 自动重连
+          console.log("Auto-reconnecting wallet...");
+          await this.connectWallet(savedWalletType as WalletType);
+        } else {
+          // 清除过期的连接状态
+          this.clearConnectionState();
+        }
+      }
+    } catch (error) {
+      console.log("Failed to restore connection state:", error);
+      this.clearConnectionState();
+    }
+  }
+
+  /**
+   * 保存连接状态
+   */
+  private saveConnectionState(walletType: WalletType): void {
+    localStorage.setItem("sheGuardian_hasConnected", "true");
+    localStorage.setItem("sheGuardian_walletType", walletType);
+    localStorage.setItem("sheGuardian_lastConnected", Date.now().toString());
+  }
+
+  /**
+   * 清除连接状态
+   */
+  private clearConnectionState(): void {
+    localStorage.removeItem("sheGuardian_hasConnected");
+    localStorage.removeItem("sheGuardian_walletType");
+    localStorage.removeItem("sheGuardian_lastConnected");
   }
 
   /**
@@ -131,7 +186,9 @@ export class Web3Service {
     // 监听账户变化
     if (typeof window !== "undefined" && window.ethereum) {
       window.ethereum.on("accountsChanged", (accounts: string[]) => {
+        console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
+          console.log("No accounts found, disconnecting...");
           this.disconnect();
         } else {
           this.handleAccountChange(accounts[0]);
@@ -140,6 +197,7 @@ export class Web3Service {
 
       // 监听网络变化
       window.ethereum.on("chainChanged", (chainId: string) => {
+        console.log("Chain changed:", chainId);
         this.handleNetworkChange(parseInt(chainId, 16));
       });
 
@@ -205,6 +263,9 @@ export class Web3Service {
       this.connectionStatus = ConnectionStatus.CONNECTED;
       this.emit("connectionStatusChanged", this.connectionStatus);
       this.emit("walletConnected", this.walletInfo);
+
+      // 保存连接状态
+      this.saveConnectionState(walletType);
 
       return this.walletInfo;
     } catch (error) {
@@ -281,6 +342,9 @@ export class Web3Service {
     this.signer = null;
     this.walletInfo = null;
     this.connectionStatus = ConnectionStatus.DISCONNECTED;
+
+    // 清除保存的连接状态
+    this.clearConnectionState();
 
     this.emit("connectionStatusChanged", this.connectionStatus);
     this.emit("walletDisconnected");

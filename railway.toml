@@ -1,0 +1,30 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[services]]
+name = "frontend"
+source = "."
+
+[services.frontend.variables]
+NODE_ENV = "production"
+PORT = "3000"
+VITE_BLOCKCHAIN_RPC_URL = "https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+VITE_CONTRACT_ADDRESS = "0x6af445EA589D8f550a3D1dacf34745071a4D5b4F"
+VITE_CHAIN_ID = "11155111"
+VITE_NETWORK_NAME = "sepolia"
+
+[[services]]
+name = "ai-agents"
+source = "./ai-agents"
+
+[services.ai-agents.variables]
+PORT = "8001"
+LOG_LEVEL = "INFO"
+GEMINI_API_KEY = "AIzaSyDummy_Key_For_Demo"

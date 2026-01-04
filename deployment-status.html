@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🚀 Emergency Guardian - 部署状态</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      .status-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+      .status-healthy {
+        background: #22c55e;
+      }
+      .status-error {
+        background: #ef4444;
+      }
+      .status-loading {
+        background: #f59e0b;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .btn {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+      .btn-success {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+      }
+      .btn-success:hover {
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 10px;
+      }
+      .service-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      @media (max-width: 768px) {
+        .service-info {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Emergency Guardian - 部署状态</h1>
+      <p>实时监控生产环境部署状态</p>
+
+      <div class="status-card">
+        <h3>📊 服务状态总览</h3>
+        <div id="overall-status">
+          <span class="status-indicator status-loading"></span>
+          正在检查服务状态...
+        </div>
+      </div>
+
+      <div class="service-info">
+        <div class="status-card">
+          <h4>🌐 前端应用</h4>
+          <div id="frontend-status">
+            <span class="status-indicator status-loading"></span>
+            检查中...
+          </div>
+          <div>
+            <strong>URL:</strong>
+            <a
+              href="http://localhost:3000"
+              target="_blank"
+              style="color: #60a5fa"
+              >http://localhost:3000</a
+            ><br />
+            <strong>健康检查:</strong>
+            <a
+              href="http://localhost:3000/health"
+              target="_blank"
+              style="color: #60a5fa"
+              >/health</a
+            >
+          </div>
+        </div>
+
+        <div class="status-card">
+          <h4>🤖 AI 服务</h4>
+          <div id="ai-status">
+            <span class="status-indicator status-loading"></span>
+            检查中...
+          </div>
+          <div>
+            <strong>代理URL:</strong>
+            <a
+              href="http://localhost:3000/ai/health"
+              target="_blank"
+              style="color: #60a5fa"
+              >http://localhost:3000/ai</a
+            ><br />
+            <strong>直接访问:</strong>
+            <a
+              href="http://localhost:8001/health"
+              target="_blank"
+              style="color: #60a5fa"
+              >http://localhost:8001</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <h3>🔗 快速访问</h3>
+        <a href="http://localhost:3000" class="btn btn-success" target="_blank">
+          🏠 打开主应用
+        </a>
+        <a href="http://localhost:3000/emergency" class="btn" target="_blank">
+          🚨 紧急求助页面
+        </a>
+        <a href="http://localhost:3000/health" class="btn" target="_blank">
+          ❤️ 健康检查
+        </a>
+        <button class="btn" onclick="refreshStatus()">🔄 刷新状态</button>
+      </div>
+
+      <div class="status-card">
+        <h3>📋 部署信息</h3>
+        <div id="deployment-info">
+          <strong>部署时间:</strong> <span id="deploy-time">-</span><br />
+          <strong>服务器端口:</strong> 3000<br />
+          <strong>AI服务端口:</strong> 8001<br />
+          <strong>环境:</strong> Production<br />
+          <strong>区块链网络:</strong> Sepolia Testnet<br />
+          <strong>合约地址:</strong>
+          <code>0x6af445EA589D8f550a3D1dacf34745071a4D5b4F</code>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <h3>📝 状态日志</h3>
+        <div id="status-log" class="log"></div>
+      </div>
+    </div>
+
+    <script>
+      let logElement = document.getElementById("status-log");
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] ${message}`;
+        console.log(logEntry);
+
+        const color =
+          type === "error"
+            ? "#ef4444"
+            : type === "success"
+            ? "#22c55e"
+            : "#ffffff";
+        logElement.innerHTML += `<div style="color: ${color}">${logEntry}</div>`;
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function updateStatus(elementId, status, message) {
+        const element = document.getElementById(elementId);
+        const indicator = element.querySelector(".status-indicator");
+
+        indicator.className = `status-indicator status-${status}`;
+        element.innerHTML = `<span class="status-indicator status-${status}"></span>${message}`;
+      }
+
+      async function checkFrontendStatus() {
+        try {
+          const response = await fetch("/health");
+          const data = await response.json();
+
+          if (data.status === "healthy") {
+            updateStatus("frontend-status", "healthy", "✅ 运行正常");
+            log("前端服务健康检查通过", "success");
+            return true;
+          } else {
+            updateStatus("frontend-status", "error", "❌ 服务异常");
+            log("前端服务状态异常", "error");
+            return false;
+          }
+        } catch (error) {
+          updateStatus("frontend-status", "error", "❌ 连接失败");
+          log(`前端服务连接失败: ${error.message}`, "error");
+          return false;
+        }
+      }
+
+      async function checkAIStatus() {
+        try {
+          const response = await fetch("/ai/health");
+          const data = await response.json();
+
+          if (data.status === "healthy") {
+            updateStatus("ai-status", "healthy", "✅ 运行正常");
+            log("AI服务健康检查通过", "success");
+            return true;
+          } else {
+            updateStatus("ai-status", "error", "❌ 服务异常");
+            log("AI服务状态异常", "error");
+            return false;
+          }
+        } catch (error) {
+          updateStatus("ai-status", "error", "❌ 连接失败");
+          log(`AI服务连接失败: ${error.message}`, "error");
+          return false;
+        }
+      }
+
+      async function checkOverallStatus() {
+        log("开始检查服务状态...");
+
+        const frontendOk = await checkFrontendStatus();
+        const aiOk = await checkAIStatus();
+
+        if (frontendOk && aiOk) {
+          updateStatus("overall-status", "healthy", "✅ 所有服务运行正常");
+          log("所有服务状态检查完成 - 系统健康", "success");
+        } else {
+          updateStatus("overall-status", "error", "❌ 部分服务异常");
+          log("服务状态检查完成 - 发现问题", "error");
+        }
+      }
+
+      function refreshStatus() {
+        log("手动刷新状态...");
+        checkOverallStatus();
+      }
+
+      // 初始化
+      window.addEventListener("load", () => {
+        document.getElementById("deploy-time").textContent =
+          new Date().toLocaleString();
+        log("部署状态页面已加载");
+        checkOverallStatus();
+
+        // 每30秒自动检查一次
+        setInterval(checkOverallStatus, 30000);
+      });
+    </script>
+  </body>
+</html>

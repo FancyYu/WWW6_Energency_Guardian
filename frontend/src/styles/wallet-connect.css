@@ -1,0 +1,221 @@
+/* 钱包连接封面专用样式 */
+
+/* 3D变换和动画 */
+.wallet-card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.wallet-card-3d:hover {
+  transform: rotateY(5deg) rotateX(5deg) scale(1.05);
+}
+
+/* 粒子连接线动画 */
+@keyframes particle-flow {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+.particle-line {
+  animation: particle-flow 2s ease-in-out infinite;
+}
+
+/* 护盾脉冲动画 */
+@keyframes shield-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.shield-pulse {
+  animation: shield-pulse 2s ease-out infinite;
+}
+
+/* 连接成功动画 */
+@keyframes connect-success {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.connect-success {
+  animation: connect-success 1.5s ease-out forwards;
+}
+
+/* 玻璃态效果增强 */
+.glass-enhanced {
+  backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 呼吸光效 */
+@keyframes breathing-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5),
+      0 0 60px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+.breathing-glow {
+  animation: breathing-glow 3s ease-in-out infinite;
+}
+
+/* 鼠标跟随光效 */
+.mouse-follow-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.mouse-follow-glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(59, 130, 246, 0.1) 0%,
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.mouse-follow-glow:hover::before {
+  opacity: 1;
+}
+
+/* 星图连接线 */
+.star-connection {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.6) 50%,
+    transparent 100%
+  );
+  transform-origin: left center;
+}
+
+/* 3D护盾几何体 */
+.shield-geometry {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.shield-face {
+  position: absolute;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* 钱包图标悬浮效果 */
+.wallet-icon-float {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wallet-icon-float:hover {
+  transform: translateY(-5px) scale(1.1);
+  filter: drop-shadow(0 10px 20px rgba(59, 130, 246, 0.3));
+}
+
+/* 连接状态指示器 */
+.connection-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.connection-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .wallet-card-3d:hover {
+    transform: scale(1.02);
+  }
+
+  .glass-enhanced {
+    backdrop-filter: blur(15px) saturate(150%);
+  }
+}
+
+/* 高性能动画优化 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .glass-enhanced {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
+  }
+}
